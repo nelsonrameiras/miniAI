@@ -1,47 +1,48 @@
+# Compiler and Flags
 CC = gcc
-CFLAGS = -std=c99 -O2 -Wall -Wextra -Iheaders
-SRC = src
-HEADERS = headers
-OBJ = $(SRC)/Arena.o $(SRC)/Tensor.o $(SRC)/Grad.o $(SRC)/Model.o $(SRC)/Glue.o tests/testDriver.o
+CFLAGS = -Wall -Wextra -O3 -Iheaders
+LIBS = -lm
 
+# Directories
+SRCDIR = src
+HEADDIR = headers
+OBJDIR = obj
 
-all: bin/testDriver
+SRC_ROOT = $(wildcard *.c)
+SRC_LIBS = $(wildcard $(SRCDIR)/*.c)
 
+OBJ_ROOT = $(patsubst %.c, $(OBJDIR)/%.o, $(SRC_ROOT))
+OBJ_LIBS = $(patsubst $(SRCDIR)/%.c, $(OBJDIR)/%.o, $(SRC_LIBS))
+OBJECTS = $(OBJ_ROOT) $(OBJ_LIBS)
 
-bin:
-	mkdir -p bin
+TARGET = mini_ai_demo
 
+# Default Rule
+all: $(TARGET)
 
-bin/testDriver: $(OBJ) | bin
-	$(CC) $(CFLAGS) -o $@ $(OBJ) -lm
+$(TARGET): $(OBJECTS)
+	$(CC) $(CFLAGS) $^ -o $@ $(LIBS)
 
-
-$(SRC)/Arena.o: $(SRC)/Arena.c $(HEADERS)/Arena.h
+$(OBJDIR)/%.o: %.c | $(OBJDIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-
-$(SRC)/Tensor.o: $(SRC)/Tensor.c $(HEADERS)/Tensor.h $(HEADERS)/Arena.h
+$(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
+$(OBJDIR):
+	mkdir -p $(OBJDIR)
 
-$(SRC)/Grad.o: $(SRC)/Grad.c $(HEADERS)/Grad.h $(HEADERS)/Tensor.h
-	$(CC) $(CFLAGS) -c $< -o $@
+ifeq (run,$(firstword $(MAKECMDGOALS)))
+  RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+  $(eval $(RUN_ARGS):;@:)
+endif
 
-$(SRC)/Model.o: $(SRC)/Model.c $(HEADERS)/Model.h $(HEADERS)/Grad.h
-	$(CC) $(CFLAGS) -c $< -o $@
-
-
-$(SRC)/Glue.o: $(SRC)/Glue.c $(HEADERS)/Glue.h $(HEADERS)/Tensor.h
-	$(CC) $(CFLAGS) -c $< -o $@
-
-
-tests/testDriver.o: tests/testDriver.c $(HEADERS)/Arena.h $(HEADERS)/Tensor.h $(HEADERS)/Model.h
-	$(CC) $(CFLAGS) -c $< -o $@
-
-clean:
-	rm -f $(SRC)/*.o bin/testDriver
-
+# Run the demo
 run: all
-	./bin/testDriver
+	@./$(TARGET) $(RUN_ARGS)
+
+# Clean build files
+clean:
+	rm -rf $(OBJDIR) $(TARGET)
 
 .PHONY: all clean run
