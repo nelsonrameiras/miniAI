@@ -1,72 +1,58 @@
 #include "../headers/Model.h"
-#include "../headers/Grad.h"
+#include <stdlib.h>
+#include <math.h>
 #include <stdio.h>
-#include <time.h>
-#include <stdint.h>
 
-LogisticModel model_create(Arena *arena, int D, float lr) {
-    LogisticModel m;
-    m.arena = arena;
-    m.lr = lr;
-    m.b = 0.0f;
-    m.W = tensor_create(arena, D, 1);
-    /* small random init: use a simple LCG generator from arena memory as deterministic */
-    for (size_t i = 0; i < m.W.size; ++i) {
-        /* very simple; not cryptographically strong; deterministic for reproducibility */
-        unsigned int seed = (unsigned int)(uintptr_t)arena;
-        seed = seed * 1664525u + 1013904223u + (unsigned int)i;
-        float r = (float)(seed % 1000) / 1000.0f;
-        m.W.data[i] = (r - 0.5f) * 0.1f; /* small values */
+void tensorFillXavier(Tensor *t, int inSize) {
+    float scale = sqrtf(2.0f / (float)inSize);
+    for (int i = 0; i < t->rows * t->cols; i++) {
+        t->data[i] = (((float)rand() / (float)RAND_MAX) * 2.0f - 1.0f) * scale;
+    }
+}
+
+Model* modelCreate(Arena *arena, int *dims, int count) {
+    Model *m = (Model*)arenaAlloc(arena, sizeof(Model));
+    m->count = count - 1;
+    m->layers = (Layer*)arenaAlloc(arena, sizeof(Layer) * m->count);
+    for (int i = 0; i < m->count; i++) {
+        m->layers[i].w = tensorAlloc(arena, dims[i+1], dims[i]);
+        m->layers[i].b = tensorAlloc(arena, dims[i+1], 1);
+        
+        tensorFillXavier(m->layers[i].w, dims[i]); 
+        for(int j=0; j < m->layers[i].b->rows; j++) m->layers[i].b->data[j] = 0.0f;
     }
     return m;
 }
 
-void model_predict(const LogisticModel *m, const Tensor *X, Tensor *out) {
-    grad_logistic_forward(X, &m->W, m->b, out);
+#include <stdio.h>
+
+void modelSave(Model *m, const char *filename) {
+    FILE *f = fopen(filename, "wb");
+    if (!f) return;
+    fwrite(&m->count, sizeof(int), 1, f);
+    for (int i = 0; i < m->count; i++) {
+        // Save weights
+        fwrite(m->layers[i].w->data, sizeof(float), m->layers[i].w->rows * m->layers[i].w->cols, f);
+        // Save biases
+        fwrite(m->layers[i].b->data, sizeof(float), m->layers[i].b->rows, f);
+    }
+    fclose(f);
+    printf("Model saved to %s\n", filename);
 }
 
-void model_train(LogisticModel *m, const Tensor *X, const Tensor *y, int epochs) {
-    int N = X->rows;
-    int D = X->cols;
-    /* allocate work tensors in model's arena */
-    Tensor preds = tensor_create(m->arena, N, 1);
-    Tensor dW = tensor_create(m->arena, D, 1);
+void modelLoad(Model *m, const char *filename) {
+    FILE *f = fopen(filename, "rb");
+    if (!f) { printf("Error: Could not open %s\n", filename); return; }
+    int count;
+    if (fread(&count, sizeof(int), 1, f) != 1) { printf("Error: Failed to read model count from %s\n", filename); fclose(f); return; }
+    if (count != m->count) { printf("Error: Model file architecture mismatch!\n"); fclose(f); return; }
 
-    for (int e = 0; e < epochs; ++e) {
-        /* forward */
-        grad_logistic_forward(X, &m->W, m->b, &preds);
-        /* loss */
-        float loss = grad_binary_cross_entropy(y, &preds);
-        /* backward */
-        grad_logistic_backward(X, y, &preds, &dW, &m->b /* abused as out param */);
-        /* Note: grad_logistic_backward writes db into m->b; to avoid confusion, compute db separately */
-        /* Recompute db properly */
-        float db;
-        grad_logistic_backward(X, y, &preds, &dW, &db);
-
-        /* update: W -= lr * dW ; b -= lr * db */
-        for (size_t i = 0; i < m->W.size; ++i) {
-            m->W.data[i] -= m->lr * dW.data[i];
-        }
-        m->b -= m->lr * db;
-
-        if ((e % 10) == 0 || e == epochs - 1) {
-            float acc = model_accuracy(m, X, y);
-            printf("Epoch %4d  Loss: %8.6f  Acc: %.4f\n", e, loss, acc);
-        }
-        /* Reset arena portion for temps by moving offset back — we rely on full reset by caller if needed. */
+    for (int i = 0; i < m->count; i++) {
+        size_t w_size = m->layers[i].w->rows * m->layers[i].w->cols;
+        size_t b_size = m->layers[i].b->rows;
+        if (fread(m->layers[i].w->data, sizeof(float), w_size, f) != w_size) { printf("Error: Failed to read weights for layer %d from %s\n", i, filename); fclose(f); return; }
+        if (fread(m->layers[i].b->data, sizeof(float), b_size, f) != b_size) { printf("Error: Failed to read biases for layer %d from %s\n", i, filename); fclose(f); return; }
     }
-}
-
-float model_accuracy(const LogisticModel *m, const Tensor *X, const Tensor *y) {
-    Tensor preds = tensor_create(m->arena, X->rows, 1);
-    model_predict(m, X, &preds);
-    int correct = 0;
-    for (int i = 0; i < X->rows; ++i) {
-        float p = preds.data[i];
-        int pred_label = p >= 0.5f ? 1 : 0;
-        int true_label = (int)(y->data[i] + 0.001f);
-        if (pred_label == true_label) ++correct;
-    }
-    return (float)correct / (float)X->rows;
+    fclose(f);
+    printf("Model loaded from %s\n", filename);
 }

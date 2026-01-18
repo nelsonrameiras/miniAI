@@ -1,44 +1,30 @@
 #include "../headers/Arena.h"
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
-struct Arena {
-    unsigned char *buf;
-    size_t capacity;
-    size_t offset;
-};
-
-Arena *arena_create(size_t size) {
-    Arena *a = (Arena *)malloc(sizeof(Arena));
-    if (!a) return NULL;
-    a->buf = (unsigned char *)malloc(size);
-    if (!a->buf) { free(a); return NULL; }
-    a->capacity = size;
-    a->offset = 0;
-    return a;
+Arena* arenaInit(size_t capacity) {
+    Arena *arena = (Arena*)malloc(sizeof(Arena));
+    arena->capacity = capacity;
+    arena->used = 0;
+    arena->buffer = (uint8_t*)malloc(capacity);
+    return arena;
 }
 
-void *arena_alloc(Arena *arena, size_t nbytes) {
-    if (arena->offset + nbytes > arena->capacity) return NULL;
-    void *ptr = arena->buf + arena->offset;
-    arena->offset += nbytes;
-    /* align offset to 8 bytes for safety */
-    size_t rem = arena->offset % 8;
-    if (rem) arena->offset += (8 - rem);
+void* arenaAlloc(Arena *arena, size_t size) {
+    // Basic 8-byte alignment
+    size = (size + 7) & ~7;
+    if (arena->used + size > arena->capacity) return NULL;
+    void *ptr = arena->buffer + arena->used;
+    arena->used += size;
+    memset(ptr, 0, size);
     return ptr;
 }
 
-void arena_reset(Arena *arena) {
-    arena->offset = 0;
+void arenaReset(Arena *arena) {
+    arena->used = 0;
 }
 
-size_t arena_remaining(const Arena *arena) {
-    return arena->capacity - arena->offset;
-}
-
-void arena_destroy(Arena *arena) {
-    if (!arena) return;
-    free(arena->buf);
+void arenaFree(Arena *arena) {
+    free(arena->buffer);
     free(arena);
 }

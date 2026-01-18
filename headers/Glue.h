@@ -2,11 +2,13 @@
 #define GLUE_H
 
 #include "Model.h"
+#include "Arena.h"
 
-/* High-level demo + test helpers */
+// High-level API for the test driver
+Tensor* glueForward(Model *m, Tensor *input, Arena *scratch);
+void glueTrainDigit(Model *m, float *rawData, int label, float lr, float noiseLevel, Arena *scratch);
+int gluePredict(Model *m, Tensor *input, Arena *scratch, float *outConfidence);
 
-/* Create a synthetic binary classification dataset (linearly separable) in arena.
-   Returns X (N x D) and y (N x 1). */
-void glue_create_synthetic_data(Arena *arena, int N, int D, Tensor *X_out, Tensor *y_out);
+float glueComputeLoss(Tensor *output, int label, Arena *scratch);
 
-#endif // GLUE_H
+#endif

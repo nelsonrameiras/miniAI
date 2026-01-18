@@ -1,40 +1,121 @@
 #include "../headers/Glue.h"
-#include "../headers/Tensor.h"
-#include <math.h>
+#include "../headers/Grad.h"
 #include <stdlib.h>
-#include <stdint.h>
+#include <math.h>
 
-/* Create synthetic data: We draw a random weight vector w_true and bias b_true, then label by sign(X @ w_true + b_true)
-   For reproducibility we produce deterministic pseudorandom values derived from arena pointer. */
-void glue_create_synthetic_data(Arena *arena, int N, int D, Tensor *X_out, Tensor *y_out) {
-    Tensor X = tensor_create(arena, N, D);
-    Tensor y = tensor_create(arena, N, 1);
-    /* deterministic pseudo-random generator using linear congruential steps */
-    unsigned int seed = (unsigned int)(uintptr_t)arena ^ 0xC0FFEE;
-    float w_true[64];
-    if (D > 64) D = 64; /* guard; although API expects reasonable D */
-    for (int j = 0; j < D; ++j) {
-        seed = seed * 1664525u + 1013904223u + (unsigned int)j;
-        w_true[j] = ((float)(seed % 1000) / 1000.0f - 0.5f) * 2.0f; /* [-1,1] */
-    }
-    float b_true = 0.2f;
+// Diagnostic tool to see how well the model is learning
+float glueComputeLoss(Tensor *output, int label, Arena *scratch) {
+    // 1. We must apply Softmax to the raw output to get probabilities
+    // (using a small epsilon to avoid log(0) which results in NaN)
+    float epsilon = 1e-7f;
+    
+    // We reuse the softmax logic but specifically for the target label
+    // This is the implementation of Cross-Entropy Loss
+    Tensor *probs = tensorAlloc(scratch, output->rows, 1); // Temporary for calculation
+    tensorSoftmax(probs, output);
+    
+    float probOfCorrect = probs->data[label];
+    if (probOfCorrect < epsilon) probOfCorrect = epsilon;
+    
+    return -logf(probOfCorrect); 
+}
 
-    for (int i = 0; i < N; ++i) {
-        /* sample x */
-        for (int j = 0; j < D; ++j) {
-            seed = seed * 1664525u + 1013904223u + (unsigned int)(i + j);
-            float xv = ((float)(seed % 1000) / 1000.0f - 0.5f) * 4.0f; /* wider range */
-            X.data[i * D + j] = xv;
+Tensor* glueForward(Model *m, Tensor *input, Arena *scratch) {
+    Tensor *currentInput = input;
+    for (int i = 0; i < m->count; i++) {
+        m->layers[i].z = tensorAlloc(scratch, m->layers[i].w->rows, 1);
+        m->layers[i].a = tensorAlloc(scratch, m->layers[i].w->rows, 1);
+        
+        tensorDot(m->layers[i].z, m->layers[i].w, currentInput);
+        tensorAdd(m->layers[i].z, m->layers[i].z, m->layers[i].b);
+        
+        // Use ReLU for hidden, Softmax logic is handled in the Train function or final output
+        if (i < m->count - 1) {
+            tensorReLU(m->layers[i].a, m->layers[i].z);
+        } else {
+            // For the very last layer, we can use raw for Softmax
+            // Softmax in gluePredict/Train will handle the probabilities.
+            for(int j=0; j<m->layers[i].z->rows; j++) 
+                m->layers[i].a->data[j] = m->layers[i].z->data[j];
         }
-        /* compute logit */
-        float logit = 0.0f;
-        for (int j = 0; j < D; ++j) logit += X.data[i * D + j] * w_true[j];
-        logit += b_true;
-        /* label with sigmoid probability > 0.5 */
-        float p = 1.0f / (1.0f + expf(-logit));
-        y.data[i] = p >= 0.5f ? 1.0f : 0.0f;
+        currentInput = m->layers[i].a;
+    }
+    return currentInput;
+}
+
+int gluePredict(Model *m, Tensor *input, Arena *scratch, float *outConfidence) {
+    Tensor *output = glueForward(m, input, scratch);
+    
+    Tensor *probs = tensorAlloc(scratch, output->rows, 1);
+    tensorSoftmax(probs, output);
+
+    int guess = 0;
+    for (int i = 1; i < probs->rows; i++) {
+        if (probs->data[i] > probs->data[guess]) guess = i;
+    }
+    
+    if (outConfidence) *outConfidence = probs->data[guess];
+    return guess;
+}
+
+void glueTrainDigit(Model *m, float *rawData, int label, float lr, float noiseLevel, Arena *scratch) {
+    // 1. Prepare Input and apply Data Augmentation (Noise)
+    Tensor *input = tensorAlloc(scratch, m->layers[0].w->cols, 1);
+    for(int i = 0; i < input->rows; i++) {
+        float val = rawData[i];
+        if (noiseLevel > 0 && ((float)rand()/(float)RAND_MAX) < noiseLevel) val = 1.0f - val; // flip pixel
+        input->data[i] = val;
     }
 
-    *X_out = X;
-    *y_out = y;
+    // 2. Forward Pass
+    Tensor *output = glueForward(m, input, scratch);
+    Tensor *probs = tensorAlloc(scratch, output->rows, 1);
+    tensorSoftmax(probs, output);
+
+    // 3. Backward Pass (Generic Loop)
+    // Initialize output delta (Softmax + Cross-Entropy shortcut)
+    Tensor *delta = tensorAlloc(scratch, output->rows, 1);
+    for (int i = 0; i < output->rows; i++) {
+        float target = (i == label) ? 1.0f : 0.0f;
+        delta->data[i] = probs->data[i] - target;
+    }
+
+    for (int i = m->count - 1; i >= 0; i--) {
+        Tensor *prevA = (i == 0) ? input : m->layers[i-1].a;
+        
+        float lambda = 0.0001f; // The "shrinkage" factor
+        // Update Weights and Biases for current layer
+        for (int r = 0; r < m->layers[i].w->rows; r++) {
+            for (int c = 0; c < m->layers[i].w->cols; c++) {
+                int idx = r * m->layers[i].w->cols + c;
+                // m->layers[i].w->data[r * m->layers[i].w->cols + c] -= lr * delta->data[r] * prevA->data[c];
+                // subtract a tiny portion of the weight itself
+                // m->layers[i].w->data[idx] -= lr * (delta->data[r] * prevA->data[c] + lambda * m->layers[i].w->data[idx]);
+                
+                float grad = (delta->data[r] * prevA->data[c]) + (lambda * m->layers[i].w->data[idx]);
+                // GRADIENT CLIPPING: Limit the impact of a single update
+                if (grad > 1.0f) grad = 1.0f;
+                if (grad < -1.0f) grad = -1.0f;
+
+                m->layers[i].w->data[idx] -= lr * grad;
+            }
+            m->layers[i].b->data[r] -= lr * delta->data[r];
+        }
+
+        // Propagate error to previous layer using ReLU derivative
+        if (i > 0) {
+            Tensor *upstreamDelta = tensorAlloc(scratch, m->layers[i-1].a->rows, 1);
+            for (int j = 0; j < m->layers[i].w->cols; j++) {
+                float error = 0;
+                for (int k = 0; k < m->layers[i].w->rows; k++) {
+                    error += m->layers[i].w->data[k * m->layers[i].w->cols + j] * delta->data[k];
+                }
+                upstreamDelta->data[j] = error;
+            }
+            // ReLU Derivative: chain error only if neuron was active (z > 0)
+            Tensor *nextDelta = tensorAlloc(scratch, m->layers[i-1].a->rows, 1);
+            tensorReLUDerivative(nextDelta, m->layers[i-1].z, upstreamDelta);
+            delta = nextDelta;
+        }
+    }
 }
