@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include "AIHeader.h"
+#include "../AIHeader.h"
 #include <string.h>
 #include <math.h>
 
@@ -17,12 +17,16 @@ static void testPerfectDigits(Model *model, float digits[10][25], Arena *scratch
 static void testRobustness(Model *model, float digits[10][25], Arena *scratch);
 static void displayConfusionMatrix(Model *model, float digits[10][25], Arena *scratch);
 
-int main2(int argc, char **argv) {
+// Global training configuration
+TrainingConfig g_trainConfig;
+
+int main(int argc, char **argv) {
     srand(time(NULL));
+    g_trainConfig = defaultTrainingConfig();
     loadBestParameters(); // tries to load what was learnt through benchmarking
 
-    Arena *perm = arenaInit(2 * 2524 * 2524);
-    Arena *scratch = arenaInit(2524 * 2524);
+    Arena *perm = arenaInit(8 * MB);
+    Arena *scratch = arenaInit(2 * MB);
 
     if (argc > 1 && strcmp(argv[1], "bench") == 0) {
         runBenchmarkSuite(perm, scratch); 
@@ -32,12 +36,12 @@ int main2(int argc, char **argv) {
     }
 
     // 25 In -> HIDDEN_SIZE Hidden -> 10 Out
-    int dims[] = {25, CURRENT_HIDDEN, 25};
-    Model *model = modelCreate(perm, dims, NUM_LAYERS);
+    int dims[] = {25, g_trainConfig.hiddenSize, 10};
+    Model *model = modelCreate(perm, dims, NUM_DIMS);
 
     // "./mini_ai_demo run" loads, otherwise it trains
     if (argc > 1 && strcmp(argv[1], "run") == 0) {
-        modelLoad(model, "digit_brain.bin");
+        modelLoad(model, "IO/models/digit_brain.bin");
     } else {
         trainModel(model, digits, scratch);
     }
@@ -53,7 +57,7 @@ int main2(int argc, char **argv) {
 
 static void trainModel(Model *model, float digits[10][25], Arena *scratch) {
     printf("--- TRAINING PHASE ---\n");
-    float lr = CURRENT_LR;
+    float lr = g_trainConfig.learningRate;
 
     // Create an array of indices [0, 1, 2, ..., 9]
     int indices[10];
@@ -85,13 +89,13 @@ static void trainModel(Model *model, float digits[10][25], Arena *scratch) {
             printf("Pass %d | Loss: %.6f | LR: %f\n", pass, loss, lr);
         }
     }
-    modelSave(model, "digit_brain.bin"); // saves training data
+    modelSave(model, "IO/models/digit_brain.bin"); // saves training data
 }
 
 static void testPerfectDigits(Model *model, float digits[10][25], Arena *scratch) {
-        printf("\n--- TEST 1: PERFECT DIGITS ---\n");
+    printf("\n--- TEST 1: PERFECT DIGITS ---\n");
     int cleanCorrect = 0;
-    for (int t = 0; t < 25; t++) {
+    for (int t = 0; t < 10; t++) {
         arenaReset(scratch);
         Tensor *input = tensorAlloc(scratch, 25, 1);
         for(int i=0; i<25; i++) input->data[i] = digits[t][i];
@@ -100,9 +104,9 @@ static void testPerfectDigits(Model *model, float digits[10][25], Arena *scratch
         int guess = gluePredict(model, input, scratch, &conf);
 
         if (guess == t) cleanCorrect++;
-        printf("Real: %d | AI: %d (Confidence: %.2f%%)\n", t, guess, conf * 250);
+        printf("Real: %d | AI: %d (Confidence: %.2f%%)\n", t, guess, conf * 100);
     }
-    printf("Perfect Digit Accuracy: %d/25\n", cleanCorrect);
+    printf("Perfect Digit Accuracy: %d/10\n", cleanCorrect);
 }
 
 static void testRobustness(Model *model, float digits[10][25], Arena *scratch) {
@@ -122,7 +126,7 @@ static void testRobustness(Model *model, float digits[10][25], Arena *scratch) {
         if (gluePredict(model, input, scratch, &conf) == label) stressCorrect++;
     }
 
-    printf("Robustness Score (2-pixel noise): %.2f%%\n", (float)stressCorrect / STRESS_TRIALS * 250);
+    printf("Robustness Score (2-pixel noise): %.2f%%\n", (float)stressCorrect / STRESS_TRIALS * 100);
 
     // Final Visual Demo of a noisy 9
     printf("\n--- VISUAL DEMO: NOISY 9 ---\n");
@@ -136,7 +140,7 @@ static void testRobustness(Model *model, float digits[10][25], Arena *scratch) {
     float conf;
     int guess = gluePredict(model, noisy9, scratch, &conf);
     printDigit(noisy9->data, 5);
-    printf("AI Guess for broken 9: %d (Confidence: %.2f%%)\n", guess, conf * 250);
+    printf("AI Guess for broken 9: %d (Confidence: %.2f%%)\n", guess, conf * 100);
 }
 
 static void displayConfusionMatrix(Model *model, float digits[10][25], Arena *scratch) {
@@ -171,7 +175,7 @@ static void displayConfusionMatrix(Model *model, float digits[10][25], Arena *sc
 }
 
 void runBenchmarkSuite(Arena *perm, Arena *scratch) {
-    printf("--- SCIENTIFIC AI BENCHMARK (N=%d) ---\n", BENCHMARK_REPETITIONS);
+    printf("--- SCIENTIFIC AI BENCHMARK (N=%d) ---\n", g_trainConfig.benchmarkReps);
     printf("Hidden |  LR   |  Avg Score  |  Std Dev  | Status\n");
     printf("-------|-------|-------------|-----------|--------\n");
 
@@ -182,23 +186,24 @@ void runBenchmarkSuite(Arena *perm, Arena *scratch) {
     for (int h = 16; h <= 256; h += 16) {
         float lrs[] = {0.001f, 0.005f, 0.008f, 0.01f, 0.015f, 0.02f};
         for (int l = 0; l < 6; l++) {
-            float scores[BENCHMARK_REPETITIONS];
+            float scores[16]; // max benchmark reps
             float sum = 0;
+            int reps = g_trainConfig.benchmarkReps;
 
-            for (int r = 0; r < BENCHMARK_REPETITIONS; r++) {
+            for (int r = 0; r < reps; r++) {
                 arenaReset(perm); 
                 scores[r] = runExperiment(h, lrs[l], perm, scratch);
                 sum += scores[r];
             }
 
-            float avg = sum / BENCHMARK_REPETITIONS;
+            float avg = sum / reps;
             
             // calc of stdDev
             float sumSqDiff = 0;
-            for (int r = 0; r < BENCHMARK_REPETITIONS; r++) {
+            for (int r = 0; r < reps; r++) {
                 sumSqDiff += (scores[r] - avg) * (scores[r] - avg);
             }
-            float stdDev = sqrt(sumSqDiff / BENCHMARK_REPETITIONS);
+            float stdDev = sqrt(sumSqDiff / reps);
 
             const char* status = "";
             // undraw criteria: we prefer the highest average, but we could penalize averages with high stdeviation.
@@ -221,7 +226,7 @@ void runBenchmarkSuite(Arena *perm, Arena *scratch) {
 
 static float runExperiment(int hiddenSize, float initialLR, Arena *perm, Arena *scratch) {
     int dims[] = {25, hiddenSize, 10};
-    Model *model = modelCreate(perm, dims, NUM_LAYERS);
+    Model *model = modelCreate(perm, dims, NUM_DIMS);
     
     float lr = initialLR;
     int indices[10];
@@ -249,14 +254,14 @@ static float runExperiment(int hiddenSize, float initialLR, Arena *perm, Arena *
         if (gluePredict(model, input, scratch, NULL) == label) correct++;
     }
     
-    return (float)correct / STRESS_TRIALS * 250.0f;
+    return (float)correct / STRESS_TRIALS * 100.0f;
 }
 
 static void applyBestParameters(int bestH, float bestL) {
-    CURRENT_HIDDEN = bestH;
-    CURRENT_LR = bestL;
+    g_trainConfig.hiddenSize = bestH;
+    g_trainConfig.learningRate = bestL;
     
-    FILE *f = fopen("best_config.txt", "w");
+    FILE *f = fopen("IO/confs/best_config_simple.txt", "w");
     if (f) {
         fprintf(f, "%d\n%f", bestH, bestL);
         fclose(f);
@@ -265,10 +270,11 @@ static void applyBestParameters(int bestH, float bestL) {
 }
 
 static void loadBestParameters() {
-    FILE *f = fopen("best_config.txt", "r");
+    FILE *f = fopen("IO/confs/best_config_simple.txt", "r");
     if (f) {
-        if (fscanf(f, "%d\n%f", &CURRENT_HIDDEN, &CURRENT_LR) == 2) {
-            printf("Optimized parameters loaded: Hidden=%d, LR=%.3f\n", CURRENT_HIDDEN, CURRENT_LR);
+        if (fscanf(f, "%d\n%f", &g_trainConfig.hiddenSize, &g_trainConfig.learningRate) == 2) {
+            printf("Optimized parameters loaded: Hidden=%d, LR=%.3f\n", 
+                   g_trainConfig.hiddenSize, g_trainConfig.learningRate);
         }
         fclose(f);
     }

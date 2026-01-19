@@ -1,23 +1,24 @@
-#include "AIHeader.h"
-#include "headers/TestDriver.h"
-#include "IO/alphabet.h" 
+#include "../AIHeader.h"
+#include "../headers/TestDriver.h"
+#include "../IO/alphabet.h" 
 
-int   CURRENT_HIDDEN = DEFAULT_HIDDEN;
-float CURRENT_LR     = DEFAULT_LR;
-int   CURRENT_B_REPS = BENCHMARK_REPETITIONS;
-const char *ALPHA_MAP = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-const char *DIGIT_MAP = "0123456789";
+static const char *ALPHA_MAP = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+static const char *DIGIT_MAP = "0123456789";
+
+// Global training configuration
+TrainingConfig g_trainConfig;
 
 int main(int argc, char **argv) {
     srand(time(NULL));
+    g_trainConfig = defaultTrainingConfig();
 
-    DatasetConfig cfg = {64, 62, 8, (float*)dataset, "ALPHANUMERIC", "IO/alpha_brain.bin", ALPHA_MAP};
+    DatasetConfig cfg = {64, 62, 8, (float*)dataset, "ALPHANUMERIC", "IO/models/alpha_brain.bin", ALPHA_MAP};
 
     for(int i = 1; i < argc; i++) {
         if(strcmp(argv[i], "digits") == 0) {
             cfg.inputSize = 25; cfg.outputSize = 10; cfg.gridSide = 5;
             cfg.data = (float*)digits; cfg.name = "DIGITS";
-            cfg.saveFile = "IO/digit_brain.bin"; cfg.map = DIGIT_MAP;
+            cfg.saveFile = "IO/models/digit_brain.bin"; cfg.map = DIGIT_MAP;
             break;
         }
     }
@@ -28,14 +29,14 @@ int main(int argc, char **argv) {
 
     if (argc > 1 && strcmp(argv[1], "bench") == 0) {
         if ((argv[2] && strcmp(argv[2], "digits") != 0) || argv[3]) 
-            CURRENT_B_REPS = argv[3] ? atoi(argv[3]) : atoi(argv[2]);
+            g_trainConfig.benchmarkReps = argv[3] ? atoi(argv[3]) : atoi(argv[2]);
         runBenchmarkSuite(perm, scratch, cfg);
         arenaFree(perm); arenaFree(scratch);
         return 0;
     }
 
-    int dims[] = {cfg.inputSize, CURRENT_HIDDEN, cfg.outputSize};
-    Model *model = modelCreate(perm, dims, NUM_LAYERS);
+    int dims[] = {cfg.inputSize, g_trainConfig.hiddenSize, cfg.outputSize};
+    Model *model = modelCreate(perm, dims, NUM_DIMS);
 
     if (argc > 1 && strcmp(argv[1], "run") == 0) modelLoad(model, cfg.saveFile);
     else trainModel(model, cfg, scratch);
@@ -51,7 +52,7 @@ int main(int argc, char **argv) {
 
 void trainModel(Model *model, DatasetConfig cfg, Arena *scratch) {
     printf("--- TRAINING PHASE (%s) ---\n", cfg.name);
-    float lr = CURRENT_LR;
+    float lr = g_trainConfig.learningRate;
     int indices[cfg.outputSize];
     for(int i=0; i<cfg.outputSize; i++) indices[i] = i;
 
@@ -163,7 +164,7 @@ void displayConfusionMatrix(Model *model, DatasetConfig cfg, Arena *scratch) {
 }
 
 void runBenchmarkSuite(Arena *perm, Arena *scratch, DatasetConfig cfg) {
-    printf("--- SCIENTIFIC AI BENCHMARK (N=%d) [%s] ---\n", CURRENT_B_REPS, cfg.name);
+    printf("--- SCIENTIFIC AI BENCHMARK (N=%d) [%s] ---\n", g_trainConfig.benchmarkReps, cfg.name);
     printf("Hidden |  LR   |  Avg Score  |  Std Dev  | Status\n");
     printf("-------|-------|-------------|-----------|--------\n");
 
@@ -172,17 +173,18 @@ void runBenchmarkSuite(Arena *perm, Arena *scratch, DatasetConfig cfg) {
     for (int h = 16; h <= 256; h += 16) {
         float lrs[] = {0.001f, 0.005f, 0.008f, 0.01f, 0.015f, 0.02f};
         for (int l = 0; l < 6; l++) {
-            float scores[CURRENT_B_REPS];
+            float scores[16]; // max benchmark reps
             float sum = 0;
-            for (int r = 0; r < CURRENT_B_REPS; r++) {
+            int reps = g_trainConfig.benchmarkReps;
+            for (int r = 0; r < reps; r++) {
                 arenaReset(perm); 
                 scores[r] = runExperiment(h, lrs[l], perm, scratch, cfg);
                 sum += scores[r];
             }
-            float avg = sum / CURRENT_B_REPS;
+            float avg = sum / reps;
             float sumSqDiff = 0;
-            for (int r = 0; r < CURRENT_B_REPS; r++) sumSqDiff += (scores[r] - avg) * (scores[r] - avg);
-            float stdDev = sqrt(sumSqDiff / CURRENT_B_REPS);
+            for (int r = 0; r < reps; r++) sumSqDiff += (scores[r] - avg) * (scores[r] - avg);
+            float stdDev = sqrt(sumSqDiff / reps);
 
             const char* status = "";
             if (avg > bestAvgScore) {
@@ -199,7 +201,7 @@ void runBenchmarkSuite(Arena *perm, Arena *scratch, DatasetConfig cfg) {
 
 float runExperiment(int hiddenSize, float initialLR, Arena *perm, Arena *scratch, DatasetConfig cfg) {
     int dims[] = {cfg.inputSize, hiddenSize, cfg.outputSize};
-    Model *model = modelCreate(perm, dims, NUM_LAYERS);
+    Model *model = modelCreate(perm, dims, NUM_DIMS);
     float lr = initialLR;
     int indices[cfg.outputSize];
     for(int i=0; i<cfg.outputSize; i++) indices[i] = i;
@@ -227,31 +229,31 @@ float runExperiment(int hiddenSize, float initialLR, Arena *perm, Arena *scratch
 }
 
 void applyBestParameters(int bestH, float bestL, DatasetConfig cfg) {
-    CURRENT_HIDDEN = bestH;
-    CURRENT_LR = bestL;
+    g_trainConfig.hiddenSize = bestH;
+    g_trainConfig.learningRate = bestL;
 
     FILE *f = NULL;
-    if (strcmp(cfg.name, "DIGITS") == 0) f = fopen("IO/best_config_DIGITS.txt", "w");
-    else if (strcmp(cfg.name, "ALPHANUMERIC") == 0) f = fopen("IO/best_config_ALPHA.txt", "w");
+    if (strcmp(cfg.name, "DIGITS") == 0) f = fopen("IO/confs/best_config_DIGITS.txt", "w");
+    else if (strcmp(cfg.name, "ALPHANUMERIC") == 0) f = fopen("IO/confs/best_config_ALPHA.txt", "w");
     
     if (!f) { printf("Error: Could not open file to save optimized parameters for %s.\n", cfg.name); return; }
 
     if (f) {
         fprintf(f, "%d\n%f", bestH, bestL); fclose(f);
-        printf("\nOptimized parameters saved in 'IO/best_config_%s.txt'\n", strcmp(cfg.name, "DIGITS") == 0 ? "DIGITS" : "ALPHA");
+        printf("\nOptimized parameters saved in 'IO/confs/best_config_%s.txt'\n", strcmp(cfg.name, "DIGITS") == 0 ? "DIGITS" : "ALPHA");
     }
 }
 
 void loadBestParameters(DatasetConfig cfg) {
     FILE *f;
-    if(strcmp(cfg.name, "DIGITS") == 0) f = fopen("IO/best_config_DIGITS.txt", "r");
-    else f = fopen("IO/best_config_ALPHA.txt", "r");
+    if(strcmp(cfg.name, "DIGITS") == 0) f = fopen("IO/confs/best_config_DIGITS.txt", "r");
+    else f = fopen("IO/confs/best_config_ALPHA.txt", "r");
 
     if (!f) { printf("Warning: Optimized parameter file not found for %s. Using defaults.\n", cfg.name); return; }
 
     if (f) {
-        if (fscanf(f, "%d\n%f", &CURRENT_HIDDEN, &CURRENT_LR) == 2) 
-            printf("Optimized parameters loaded: Hidden=%d, LR=%.3f\n", CURRENT_HIDDEN, CURRENT_LR);
+        if (fscanf(f, "%d\n%f", &g_trainConfig.hiddenSize, &g_trainConfig.learningRate) == 2) 
+            printf("Optimized parameters loaded: Hidden=%d, LR=%.3f\n", g_trainConfig.hiddenSize, g_trainConfig.learningRate);
         fclose(f);
     }
 }

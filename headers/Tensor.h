@@ -9,7 +9,7 @@ typedef struct {
 } Tensor;
 
 Tensor* tensorAlloc(Arena *arena, int rows, int cols);
-void tensorFillRandom(Tensor *t);
+void tensorFillXavier(Tensor *t, int inSize);  // Xavier/He initialization
 void tensorDot(Tensor *out, Tensor *a, Tensor *b); // out = a * b
 void tensorAdd(Tensor *out, Tensor *a, Tensor *b); // out = a + b
 float sigmoid(float x);

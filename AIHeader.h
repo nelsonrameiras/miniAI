@@ -8,28 +8,29 @@
 #include "headers/Model.h"
 #include "headers/Glue.h"
 #include "headers/Utils.h"
+#include "headers/ImageLoader.h"
+#include "headers/ImagePreprocess.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
 #include <math.h>
+#include <dirent.h>
+#include <sys/stat.h>
 
-extern int   CURRENT_HIDDEN;
-extern float CURRENT_LR;
+// --- Network Architecture Defaults ---
+#define DEFAULT_HIDDEN  192     // default hidden layer neurons
 
-// --- Hyperparameters ---
-#define INPUT_SIZE      64
-
-#define DEFAULT_HIDDEN  192     // neurons
-
-#define OUTPUT_SIZE     62
-#define NUM_LAYERS      3
+// NUM_DIMS = number of dimension values (input, hidden, output)
+// Actual layer count = NUM_DIMS - 1 (2 layers for a 3-dim network)
+#define NUM_DIMS        3
 
 // --- Training Parameters ---
 #define DEFAULT_LR      0.008f
+#define LAMBDA          0.0001f  // L2 regularization factor
+#define GRAD_CLIP       1.0f     // Gradient clipping threshold
 
-#define TOTAL_EPOCHS    20000
 #define TOTAL_PASSES    2000
 #define DECAY_STEP      5000
 #define DECAY_RATE      0.7f
@@ -41,7 +42,27 @@ extern float CURRENT_LR;
 #define CONFUSION_TESTS 500
 
 // --- Benchmarking Parameters ---
-#define BENCHMARK_REPETITIONS 10
+#define BENCHMARK_REPETITIONS 1
+
+// --- Training Configuration ---
+// Holds runtime-adjustable training parameters
+typedef struct {
+    int   hiddenSize;
+    float learningRate;
+    int   benchmarkReps;
+} TrainingConfig;
+
+// Global training config instance (replaces individual globals)
+extern TrainingConfig g_trainConfig;
+
+// Helper to initialize default training config
+static inline TrainingConfig defaultTrainingConfig(void) {
+    return (TrainingConfig){
+        .hiddenSize = DEFAULT_HIDDEN,
+        .learningRate = DEFAULT_LR,
+        .benchmarkReps = BENCHMARK_REPETITIONS
+    };
+}
 
 extern float digits[10][25];
 

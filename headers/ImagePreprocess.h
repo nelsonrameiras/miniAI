@@ -1,0 +1,16 @@
+#ifndef IMAGE_PREPROCESS_H
+#define IMAGE_PREPROCESS_H
+
+#include "ImageLoader.h"
+
+// Config of preprocessing
+typedef struct {
+    int targetSize;      // Target size (pex, 8 para 8x8, 5 para 5x5)
+    float threshold;     // Threshold of binarization (0.0-1.0)
+    int invertColors;    // 1 = invert (white->black), 0 = keep
+} PreprocessConfig;
+
+// Converts RawImage to array of floats normalized
+float* imagePreprocess(RawImage *img, PreprocessConfig cfg);
+
+#endif

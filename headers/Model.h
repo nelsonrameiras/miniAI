@@ -16,7 +16,7 @@ typedef struct {
 
 Model* modelCreate(Arena *arena, int *dims, int count);
 
-void modelSave(Model *m, const char *filename);
-void modelLoad(Model *m, const char *filename);
+int modelSave(Model *m, const char *filename);  // Returns 0 on success, -1 on error
+int modelLoad(Model *m, const char *filename);  // Returns 0 on success, -1 on error
 
 #endif

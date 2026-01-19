@@ -133,7 +133,7 @@ This modularity allows the system to be extended without rewriting core logic.
 ### Topology
 
 - Type: Fully connected feed-forward network
-- Layers: `NUM_LAYERS = 3`
+- Dimensions: `NUM_DIMS = 3` (input → hidden → output = 2 layers)
 
 Typical layout:
 
@@ -195,8 +195,7 @@ Datasets are embedded directly in header files to remove runtime dependencies.
 miniAI/
 ├── AIHeader.h              # Global configuration and hyperparameters
 ├── Makefile
-├── testDriver.c            # Full training/testing driver
-├── testDriverSimple.c      # Minimal example
+├── README.md
 │
 ├── headers/
 │   ├── Arena.h
@@ -205,7 +204,9 @@ miniAI/
 │   ├── Model.h
 │   ├── Glue.h
 │   ├── Utils.h
-│   └── TestDriver.h
+│   ├── TestDriver.h
+│   ├── ImageLoader.h
+│   └── ImagePreprocess.h
 │
 ├── src/
 │   ├── Arena.c
@@ -213,13 +214,24 @@ miniAI/
 │   ├── Grad.c
 │   ├── Model.c
 │   ├── Glue.c
-│   └── Utils.c
+│   ├── Utils.c
+│   └── tests/
+│       ├── testDriver.c        # Full training/testing driver
+│       ├── testDriverImage.c   # PNG image-based driver
+│       └── testDriverSimple.c  # Minimal digits-only example
 │
 ├── IO/
 │   ├── alphabet.h
-│   ├── best_config_ALPHA.txt
-│   ├── best_config_DIGITS.txt
-│   └── *.bin
+│   ├── ImageLoader.c
+│   ├── ImagePreprocess.c
+│   ├── confs/
+│   │   ├── best_config_ALPHA.txt
+│   │   └── best_config_DIGITS.txt
+│   ├── external/
+│   │   └── stb_image.h
+│   ├── models/
+│   ├── pngAlphaChars/
+│   └── pngDigits/
 ```
 
 ---
@@ -236,19 +248,19 @@ make
 ### Run (alphanumeric)
 
 ```bash
-./bin/testDriver
+./testDriver
 ```
 
 ### Digits dataset
 
 ```bash
-./bin/testDriver digits
+./testDriver digits
 ```
 
 ### Inference only
 
 ```bash
-./bin/testDriver run
+./testDriver run
 ```
 
 ---
@@ -272,8 +284,8 @@ This makes experimentation reproducible and centralized.
 Benchmark mode measures pure inference cost:
 
 ```bash
-./bin/testDriver bench
-./bin/testDriver bench digits
+./testDriver bench
+./testDriver bench digits
 ```
 
 The benchmark isolates:

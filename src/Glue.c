@@ -1,5 +1,6 @@
 #include "../headers/Glue.h"
 #include "../headers/Grad.h"
+#include "../AIHeader.h"
 #include <stdlib.h>
 #include <math.h>
 
@@ -83,19 +84,17 @@ void glueTrainDigit(Model *m, float *rawData, int label, float lr, float noiseLe
     for (int i = m->count - 1; i >= 0; i--) {
         Tensor *prevA = (i == 0) ? input : m->layers[i-1].a;
         
-        float lambda = 0.0001f; // The "shrinkage" factor
         // Update Weights and Biases for current layer
         for (int r = 0; r < m->layers[i].w->rows; r++) {
             for (int c = 0; c < m->layers[i].w->cols; c++) {
                 int idx = r * m->layers[i].w->cols + c;
-                // m->layers[i].w->data[r * m->layers[i].w->cols + c] -= lr * delta->data[r] * prevA->data[c];
-                // subtract a tiny portion of the weight itself
-                // m->layers[i].w->data[idx] -= lr * (delta->data[r] * prevA->data[c] + lambda * m->layers[i].w->data[idx]);
                 
-                float grad = (delta->data[r] * prevA->data[c]) + (lambda * m->layers[i].w->data[idx]);
-                // GRADIENT CLIPPING: Limit the impact of a single update
-                if (grad > 1.0f) grad = 1.0f;
-                if (grad < -1.0f) grad = -1.0f;
+                // L2 regularization: add lambda * weight to gradient
+                float grad = (delta->data[r] * prevA->data[c]) + (LAMBDA * m->layers[i].w->data[idx]);
+                
+                // Gradient clipping to prevent exploding gradients
+                if (grad > GRAD_CLIP) grad = GRAD_CLIP;
+                if (grad < -GRAD_CLIP) grad = -GRAD_CLIP;
 
                 m->layers[i].w->data[idx] -= lr * grad;
             }
