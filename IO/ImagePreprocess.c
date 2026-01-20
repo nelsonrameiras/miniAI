@@ -9,12 +9,12 @@ typedef struct {
 } BoundingBox;
 
 // convert RGB pixel to grayscale (luminance)
-static inline uint8_t rgbToGray(uint8_t r, uint8_t g, uint8_t b) {
+uint8_t rgbToGray(uint8_t r, uint8_t g, uint8_t b) {
     return (uint8_t)(0.299f * r + 0.587f * g + 0.114f * b);
 }
 
 // convert image to grayscale (if needed)
-static uint8_t* convertToGrayscale(RawImage *img) {
+uint8_t* convertToGrayscale(RawImage *img) {
     int totalPixels = img->width * img->height;
     uint8_t *gray = (uint8_t*)malloc(totalPixels);
     if (!gray) { fprintf(stderr, "Error: failed to allocate grayscale buffer\n"); return NULL; }
@@ -33,7 +33,7 @@ static uint8_t* convertToGrayscale(RawImage *img) {
     return gray;
 }
 
-static uint8_t calculateOtsuThreshold(uint8_t *gray, int totalPixels) {
+uint8_t calculateOtsuThreshold(uint8_t *gray, int totalPixels) {
     int histogram[256] = {0};
 
     // build histogram
@@ -65,6 +65,21 @@ static uint8_t calculateOtsuThreshold(uint8_t *gray, int totalPixels) {
         if (variance > maxVariance) {
             maxVariance = variance;
             threshold = i;
+        }
+    }
+
+    // For binary images (only 2 values), threshold needs adjustment
+    // If threshold equals the minimum value, we need to use threshold+1
+    // to ensure pixels AT the threshold are classified as foreground
+    // This handles the edge case where Otsu returns 0 for black/white images
+    if (threshold < 255 && histogram[threshold] > 0) {
+        // Check if this is effectively a binary image
+        int nonZeroLevels = 0;
+        for (int i = 0; i < 256; i++) {
+            if (histogram[i] > 0) nonZeroLevels++;
+        }
+        if (nonZeroLevels <= 2) {
+            threshold++;  // Shift threshold to include the lower value as foreground
         }
     }
 
@@ -129,20 +144,51 @@ static uint8_t* extractAndCenter(uint8_t *gray, int width, int height, uint8_t t
     int letterW = bbox.right - bbox.left + 1;
     int letterH = bbox.bottom - bbox.top + 1;
 
+    // Calculate center of mass for proper centering
+    float sumX = 0, sumY = 0;
+    int count = 0;
+    for (int y = bbox.top; y <= bbox.bottom; y++) {
+        for (int x = bbox.left; x <= bbox.right; x++) {
+            if (gray[y * width + x] < threshold) {  // Foreground pixel
+                sumX += (x - bbox.left);
+                sumY += (y - bbox.top);
+                count++;
+            }
+        }
+    }
+    
+    float comX, comY;
+    if (count > 0) {
+        comX = sumX / count;
+        comY = sumY / count;
+    } else {
+        comX = letterW / 2.0f;
+        comY = letterH / 2.0f;
+    }
+
     int maxDim = (letterW > letterH) ? letterW : letterH;
-    int margin = maxDim / 6;
+    int margin = maxDim / 4;  // 25% margin
+    if (margin < 2) margin = 2;
     int squareSize = maxDim + 2 * margin;
 
     uint8_t *square = malloc(squareSize * squareSize);
     if (!square) return NULL;
-    memset(square, 255, squareSize * squareSize);
+    memset(square, 255, squareSize * squareSize);  // White background
 
-    int offsetX = (squareSize - letterW) / 2;
-    int offsetY = (squareSize - letterH) / 2;
+    // Center by center of mass (NOT bbox center)
+    float squareCenter = squareSize / 2.0f;
+    int offsetX = (int)(squareCenter - comX);
+    int offsetY = (int)(squareCenter - comY);
 
-    for (int y = 0; y < letterH; y++)
-        for (int x = 0; x < letterW; x++)
-            square[(offsetY + y) * squareSize + (offsetX + x)] = gray[(bbox.top + y) * width + (bbox.left + x)];
+    for (int y = bbox.top; y <= bbox.bottom; y++) {
+        for (int x = bbox.left; x <= bbox.right; x++) {
+            int destX = (x - bbox.left) + offsetX;
+            int destY = (y - bbox.top) + offsetY;
+            if (destX >= 0 && destX < squareSize && destY >= 0 && destY < squareSize) {
+                square[destY * squareSize + destX] = gray[y * width + x];
+            }
+        }
+    }
 
     *outSize = squareSize;
     return square;

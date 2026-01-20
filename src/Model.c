@@ -27,6 +27,13 @@ int modelSave(Model *m, const char *filename) {
     if (!f) { fprintf(stderr, "Error: Could not open %s for writing\n", filename); return -1; }
     
     fwrite(&m->count, sizeof(int), 1, f);
+    
+    // Save dimensions for each layer (for verification on load)
+    for (int i = 0; i < m->count; i++) {
+        fwrite(&m->layers[i].w->rows, sizeof(int), 1, f);
+        fwrite(&m->layers[i].w->cols, sizeof(int), 1, f);
+    }
+    
     for (int i = 0; i < m->count; i++) {
         // Save weights
         fwrite(m->layers[i].w->data, sizeof(float), m->layers[i].w->rows * m->layers[i].w->cols, f);
@@ -43,7 +50,24 @@ int modelLoad(Model *m, const char *filename) {
     if (!f) { fprintf(stderr, "Error: Could not open %s\n", filename); return -1; }
     int count;
     if (fread(&count, sizeof(int), 1, f) != 1) { fprintf(stderr, "Error: Failed to read model count from %s\n", filename); fclose(f); return -1; }
-    if (count != m->count) { fprintf(stderr, "Error: Model file architecture mismatch!\n"); fclose(f); return -1; }
+    if (count != m->count) { fprintf(stderr, "Error: Model layer count mismatch (file: %d, expected: %d)\n", count, m->count); fclose(f); return -1; }
+
+    // Verify dimensions match
+    for (int i = 0; i < m->count; i++) {
+        int rows, cols;
+        if (fread(&rows, sizeof(int), 1, f) != 1 || fread(&cols, sizeof(int), 1, f) != 1) {
+            fprintf(stderr, "Error: Failed to read layer %d dimensions from %s\n", i, filename);
+            fclose(f);
+            return -1;
+        }
+        if (rows != m->layers[i].w->rows || cols != m->layers[i].w->cols) {
+            fprintf(stderr, "Error: Layer %d dimension mismatch! File: %dx%d, Expected: %dx%d\n", 
+                    i, rows, cols, m->layers[i].w->rows, m->layers[i].w->cols);
+            fprintf(stderr, "Hint: The saved model has different hidden size. Retrain with current config.\n");
+            fclose(f);
+            return -1;
+        }
+    }
 
     for (int i = 0; i < m->count; i++) {
         size_t w_size = m->layers[i].w->rows * m->layers[i].w->cols;

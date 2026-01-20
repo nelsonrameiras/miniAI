@@ -13,4 +13,15 @@ typedef struct {
 // Converts RawImage to array of floats normalized
 float* imagePreprocess(RawImage *img, PreprocessConfig cfg);
 
+// --- Utility functions (shared with Segmenter) ---
+
+// Convert RGB pixel to grayscale using luminance formula
+uint8_t rgbToGray(uint8_t r, uint8_t g, uint8_t b);
+
+// Convert image to grayscale (caller must free result)
+uint8_t* convertToGrayscale(RawImage *img);
+
+// Calculate Otsu's threshold for binarization
+uint8_t calculateOtsuThreshold(uint8_t *gray, int totalPixels);
+
 #endif

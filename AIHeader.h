@@ -20,14 +20,14 @@
 #include <sys/stat.h>
 
 // --- Network Architecture Defaults ---
-#define DEFAULT_HIDDEN  192     // default hidden layer neurons
+#define DEFAULT_HIDDEN  1024     // default hidden layer neurons
 
 // NUM_DIMS = number of dimension values (input, hidden, output)
 // Actual layer count = NUM_DIMS - 1 (2 layers for a 3-dim network)
 #define NUM_DIMS        3
 
 // --- Training Parameters ---
-#define DEFAULT_LR      0.008f
+#define DEFAULT_LR      0.005f
 #define LAMBDA          0.0001f  // L2 regularization factor
 #define GRAD_CLIP       1.0f     // Gradient clipping threshold
 

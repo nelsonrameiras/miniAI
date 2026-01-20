@@ -24,6 +24,8 @@ void testPerfectPNG(Model *model, PNGDataset *ds, DatasetConfig cfg, Arena *scra
 void testRobustnessPNG(Model *model, PNGDataset *ds, DatasetConfig cfg, Arena *scratch);
 void testWithExternalPNG(Model *model, const char *pngPath, DatasetConfig cfg, Arena *scratch);
 void visualDemoPNG(Model *model, PNGDataset *ds, DatasetConfig cfg, Arena *scratch);
+static void runBenchmarkSuitePNG(Arena *perm, Arena *scratch, PNGDataset *ds, DatasetConfig cfg);
+static float runExperimentPNG(int hiddenSize, float initialLR, Arena *perm, Arena *scratch, PNGDataset *ds, DatasetConfig cfg);
 
 int main(int argc, char **argv) {
     srand(time(NULL));
@@ -41,6 +43,7 @@ int main(int argc, char **argv) {
     const char *pngDir = "IO/pngAlphaChars";
 
     const char *testPngPath = NULL;
+    int runBench = 0;
     // Parse command-line arguments
     for(int i = 1; i < argc; i++) {
         if(strcmp(argv[i], "digits") == 0) {
@@ -53,6 +56,12 @@ int main(int argc, char **argv) {
             pngDir = "IO/pngDigits";
         } else if(strcmp(argv[i], "--test-png") == 0 && i + 1 < argc) {
             testPngPath = argv[++i];
+        } else if(strcmp(argv[i], "bench") == 0) {
+            runBench = 1;
+            // Optional: bench N sets repetitions
+            if(i + 1 < argc && argv[i+1][0] >= '0' && argv[i+1][0] <= '9') {
+                g_trainConfig.benchmarkReps = atoi(argv[++i]);
+            }
         }
     }
 
@@ -72,6 +81,15 @@ int main(int argc, char **argv) {
 
     loadBestParameters(cfg);
 
+    // Handle benchmark mode - runs before model creation to test different hidden sizes
+    if (runBench) {
+        runBenchmarkSuitePNG(perm, scratch, dataset, cfg);
+        freePNGDataset(dataset);
+        arenaFree(perm);
+        arenaFree(scratch);
+        return 0;
+    }
+
     // Create model
     int dims[] = { cfg.inputSize, g_trainConfig.hiddenSize, cfg.outputSize };
     Model *model = modelCreate(perm, dims, NUM_DIMS);
@@ -87,7 +105,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    if (shouldTrain) trainModelFromPNG(model, dataset, cfg, scratch);
+    if (shouldTrain) trainModelFromPNG(model, dataset, cfg, scratch);;
 
     // Evaluation tests
     testPerfectPNG(model, dataset, cfg, scratch);
@@ -152,9 +170,7 @@ void freePNGDataset(PNGDataset *ds) {
 
     if (ds->samples) {
         // Iterate over all allocated slots, not just numSamples
-        for (int i = 0; i < ds->totalSlots; i++) {
-            if (ds->samples[i]) free(ds->samples[i]);
-        }
+        for (int i = 0; i < ds->totalSlots; i++) if (ds->samples[i]) free(ds->samples[i]);
         free(ds->samples);
     }
 
@@ -162,6 +178,42 @@ void freePNGDataset(PNGDataset *ds) {
 }
 
 // ===== TRAINING =====
+
+void augmentSample(float *dst, float *src, int size, int grid) {
+    memcpy(dst, src, size * sizeof(float));
+
+    // random shift (simulates bad recort)
+    int dx = (rand() % 5) - 2; // -2 .. +2
+    int dy = (rand() % 5) - 2;
+
+    float tmp[size];
+    memset(tmp, 0, sizeof(tmp));
+
+    for (int y = 0; y < grid; y++) {
+        for (int x = 0; x < grid; x++) {
+            int nx = x + dx;
+            int ny = y + dy;
+            if (nx >= 0 && nx < grid && ny >= 0 && ny < grid) {
+                tmp[ny * grid + nx] = dst[y * grid + x];
+            }
+        }
+    }
+    memcpy(dst, tmp, sizeof(tmp));
+
+    // random pixel dropout (simulates corts)
+    int drops = grid / 2;
+    for (int i = 0; i < drops; i++) {
+        int p = rand() % size;
+        dst[p] = 0.0f;
+    }
+
+    // threshold noise
+    for (int i = 0; i < size; i++) {
+        if ((rand() & 31) == 0) {
+            dst[i] = 1.0f - dst[i];
+        }
+    }
+}
 
 void trainModelFromPNG(Model *model, PNGDataset *ds, DatasetConfig cfg, Arena *scratch) {
     printf("--- TRAINING PHASE (%s) ---\n", cfg.name);
@@ -184,6 +236,10 @@ void trainModelFromPNG(Model *model, PNGDataset *ds, DatasetConfig cfg, Arena *s
         for (int i = 0; i < validCount; i++) {
             arenaReset(scratch);
             int idx = indices[i];
+
+            float aug[cfg.inputSize];
+            augmentSample(aug, ds->samples[idx], cfg.inputSize, cfg.gridSide);
+
             glueTrainDigit(model, ds->samples[idx], idx, lr, TRAIN_NOISE, scratch);
         }
 
@@ -353,5 +409,135 @@ void loadBestParameters(DatasetConfig cfg) {
         if (fscanf(f, "%d\n%f", &g_trainConfig.hiddenSize, &g_trainConfig.learningRate) == 2) 
             printf("Optimized parameters loaded: Hidden=%d, LR=%.3f\n", g_trainConfig.hiddenSize, g_trainConfig.learningRate);
         fclose(f);
+    }
+}
+
+// ===== BENCHMARKING =====
+
+static float runExperimentPNG(int hiddenSize, float initialLR, Arena *perm, Arena *scratch, PNGDataset *ds, DatasetConfig cfg) {
+    int dims[] = {cfg.inputSize, hiddenSize, cfg.outputSize};
+    Model *model = modelCreate(perm, dims, NUM_DIMS);
+    if (!model) return 0.0f;
+
+    float lr = initialLR;
+    int numChars = strlen(cfg.map);
+    
+    // Build valid indices array
+    int validIndices[numChars];
+    int validCount = 0;
+    for(int i = 0; i < numChars; i++) 
+        if (ds->samples[i] != NULL) validIndices[validCount++] = i;
+    
+    if (validCount == 0) return 0.0f;
+
+    // Training loop (reduced passes for benchmarking speed)
+    int benchPasses = TOTAL_PASSES;  // Faster benchmark iterations
+    for (int pass = 0; pass < benchPasses; pass++) {
+        shuffle(validIndices, validCount);
+        for (int i = 0; i < validCount; i++) {
+            arenaReset(scratch);
+            int idx = validIndices[i];
+            glueTrainDigit(model, ds->samples[idx], idx, lr, TRAIN_NOISE, scratch);
+        }
+        if (pass > 0 && pass % (DECAY_STEP / validCount) == 0) lr *= DECAY_RATE;
+    }
+
+    // Stress test evaluation
+    int correct = 0;
+    int noiseLevel = (cfg.gridSide == 16) ? 4 : 2;
+    for (int i = 0; i < STRESS_TRIALS; i++) {
+        arenaReset(scratch);
+        int label = validIndices[rand() % validCount];
+        Tensor *input = tensorAlloc(scratch, cfg.inputSize, 1);
+        memcpy(input->data, ds->samples[label], cfg.inputSize * sizeof(float));
+        for(int n = 0; n < noiseLevel; n++) input->data[rand() % cfg.inputSize] = 1.0f - input->data[rand() % cfg.inputSize];
+        if (gluePredict(model, input, scratch, NULL) == label) correct++;
+    }
+    
+    return (float)correct / STRESS_TRIALS * 100.0f;
+}
+
+static void runBenchmarkSuitePNG(Arena *perm, Arena *scratch, PNGDataset *ds, DatasetConfig cfg) {
+    printf("--- SCIENTIFIC AI BENCHMARK (N=%d) [%s PNG] ---\n", g_trainConfig.benchmarkReps, cfg.name);
+    printf("Hidden |  LR   |  Avg Score  |  Std Dev  | Status\n");
+    printf("-------|-------|-------------|-----------|--------\n");
+
+    float bestAvgScore = 0; 
+    int bestH = 0; 
+    float bestL = 0;
+
+    // Test different hidden layer sizes
+    for (int h = 32; h <= 512; h += 32) {  
+        float lrs[] = {0.001f, 0.005f, 0.008, 0.01f};
+        for (int l = 0; l < 4; l++) {
+            float scores[16]; // max benchmark reps
+            float sum = 0;
+            int reps = g_trainConfig.benchmarkReps;
+            int stoppedEarly = 0;
+            int actualReps = 0;
+            
+            for (int r = 0; r < reps; r++) {
+                arenaReset(perm); 
+                scores[r] = runExperimentPNG(h, lrs[l], perm, scratch, ds, cfg);
+                sum += scores[r];
+                actualReps++;
+                
+                // Early stopping: check if we can still beat the best
+                // Best possible avg = (current_sum + remaining_reps * 100) / total_reps
+                if (r > 0 && bestAvgScore > 0) {
+                    int remaining = reps - r - 1;
+                    float bestPossible = (sum + remaining * 100.0f) / reps;
+                    if (bestPossible < bestAvgScore - 1.0f) {  // 1% margin
+                        stoppedEarly = 1;
+                        break;
+                    }
+                }
+            }
+            
+            float avg = sum / actualReps;
+            float sumSqDiff = 0;
+            for (int r = 0; r < actualReps; r++) sumSqDiff += (scores[r] - avg) * (scores[r] - avg);
+            float stdDev = sqrtf(sumSqDiff / actualReps);
+
+            const char* status = "";
+            if (stoppedEarly) {
+                status = " (skipped)";
+            } else if (avg > bestAvgScore) {
+                bestAvgScore = avg; 
+                bestH = h; 
+                bestL = lrs[l];
+                status = (stdDev < 2.0f) ? " <-- BEST" : " <-- BEST*";
+            }
+            printf("  %3d  | %.3f |   %6.2f%%  |  %6.2f   |%s\n", h, lrs[l], avg, stdDev, status);
+        }
+        printf("-------|-------|-------------|-----------|--------\n");
+    }
+    
+    printf("\nWINNER: Hidden=%d, LR=%.3f (Avg: %.2f%%)\n", bestH, bestL, bestAvgScore);
+    applyBestParameters(bestH, bestL, cfg);
+    
+    // Train and save a final model with the winning configuration
+    printf("\n--- TRAINING FINAL MODEL WITH BEST PARAMS ---\n");
+    arenaReset(perm);
+    int dims[] = {cfg.inputSize, bestH, cfg.outputSize};
+    Model *finalModel = modelCreate(perm, dims, NUM_DIMS);
+    if (finalModel) {
+        float lr = bestL;
+        int numChars = strlen(cfg.map);
+        int validIndices[numChars];
+        int validCount = 0;
+        for(int i = 0; i < numChars; i++) 
+            if (ds->samples[i] != NULL) validIndices[validCount++] = i;
+        
+        for (int pass = 0; pass < TOTAL_PASSES; pass++) {
+            shuffle(validIndices, validCount);
+            for (int i = 0; i < validCount; i++) {
+                arenaReset(scratch);
+                glueTrainDigit(finalModel, ds->samples[validIndices[i]], validIndices[i], lr, TRAIN_NOISE, scratch);
+            }
+            if (pass > 0 && pass % (DECAY_STEP / validCount) == 0) lr *= DECAY_RATE;
+        }
+        modelSave(finalModel, cfg.saveFile);
+        printf("Final model trained and saved!\n");
     }
 }
