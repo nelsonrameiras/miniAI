@@ -788,7 +788,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Nelson Ramos**
 - GitHub: [@nelsonramosua](https://github.com/nelsonramosua).
-- LinkedIn: [Nelson Ramos](https://www.linkedin.com/in/nelson-ramos-208572350/).
+- LinkedIn: [Nelson Ramos](https://www.linkedin.com/in/nelsonrocharamos/).
 
 ## Acknowledgments
 
