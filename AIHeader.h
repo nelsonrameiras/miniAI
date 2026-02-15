@@ -64,6 +64,4 @@ static inline TrainingConfig defaultTrainingConfig(void) {
     };
 }
 
-extern float digits[10][25];
-
 #endif

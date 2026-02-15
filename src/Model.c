@@ -28,22 +28,24 @@ int modelSave(Model *m, const char *filename) {
     
     fwrite(&m->count, sizeof(int), 1, f);
     
-    // Save dimensions for each layer (for verification on load)
+    // save dimensions for each layer (for verification on load)
     for (int i = 0; i < m->count; i++) {
         fwrite(&m->layers[i].w->rows, sizeof(int), 1, f);
         fwrite(&m->layers[i].w->cols, sizeof(int), 1, f);
     }
     
     for (int i = 0; i < m->count; i++) {
-        // Save weights
+        // save weights
         fwrite(m->layers[i].w->data, sizeof(float), m->layers[i].w->rows * m->layers[i].w->cols, f);
-        // Save biases
+        // save biases
         fwrite(m->layers[i].b->data, sizeof(float), m->layers[i].b->rows, f);
     }
     fclose(f);
     printf("Model saved to %s\n", filename);
     return 0;
 }
+
+// kind of lazy with cleanups... should be improved.
 
 int modelLoad(Model *m, const char *filename) {
     FILE *f = fopen(filename, "rb");
@@ -52,7 +54,7 @@ int modelLoad(Model *m, const char *filename) {
     if (fread(&count, sizeof(int), 1, f) != 1) { fprintf(stderr, "Error: Failed to read model count from %s\n", filename); fclose(f); return -1; }
     if (count != m->count) { fprintf(stderr, "Error: Model layer count mismatch (file: %d, expected: %d)\n", count, m->count); fclose(f); return -1; }
 
-    // Verify dimensions match
+    // verify dimensions match!!! (or else, catastrophic failure...)
     for (int i = 0; i < m->count; i++) {
         int rows, cols;
         if (fread(&rows, sizeof(int), 1, f) != 1 || fread(&cols, sizeof(int), 1, f) != 1) {

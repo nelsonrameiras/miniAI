@@ -2,7 +2,8 @@ from PIL import Image, ImageDraw, ImageFont
 import string
 import os
 
-# ================= CONFIG =================
+## Thank you, Chat GPT. I did not have the patience to do this.
+## I only tuned this.
 
 IMG_SIZE = 16
 MARGIN_RATIO = 0.85
@@ -16,8 +17,6 @@ CHARS = (
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-# ================= FONT LOADING =================
-
 def load_font(size):
     for name in [
         "arial.ttf",
@@ -28,8 +27,6 @@ def load_font(size):
         except OSError:
             continue
     raise RuntimeError("Font not found (Arial)")
-
-# ================= GENERATION =================
 
 for ch in CHARS:
     img = Image.new("L", (IMG_SIZE, IMG_SIZE), 255)
@@ -55,7 +52,7 @@ for ch in CHARS:
 
     draw.text((x, y), ch, fill=0, font=font)
 
-    # ================= HACKS (OPTION 2) =================
+    # HACKS 
 
     cx = IMG_SIZE // 2
     mid = IMG_SIZE // 2

@@ -6,15 +6,15 @@
 
 // Represents a sequence of segmented characters from a phrase image
 typedef struct {
-    float **chars;      // Array of character data (each is targetSize × targetSize floats)
+    float **chars;      // Array of character data (each is targetSize x targetSize floats)
     int count;          // Number of characters found
     int capacity;       // Allocated capacity for chars array
-    int charSize;       // Size of each character (targetSize × targetSize)
+    int charSize;       // Size of each character (targetSize x targetSize)
 } CharSequence;
 
 // Configuration for phrase segmentation
 typedef struct {
-    int targetSize;         // Target grid size for each char (e.g., 8 for 8x8, 16 for 16x16)
+    int targetSize;         // Target grid size for each char (pex, 8 for 8x8, 16 for 16x16)
     float binarizeThreshold;// Threshold for binarization (0.0-1.0)
     int minCharWidth;       // Minimum character width in pixels (to filter noise)
     int spaceThreshold;     // Gap width (in pixels) to consider as word space

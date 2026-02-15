@@ -7,12 +7,9 @@
 // Diagnostic tool to see how well the model is learning
 float glueComputeLoss(Tensor *output, int label, Arena *scratch) {
     // 1. We must apply Softmax to the raw output to get probabilities
-    // (using a small epsilon to avoid log(0) which results in NaN)
     float epsilon = 1e-7f;
     
-    // We reuse the softmax logic but specifically for the target label
-    // This is the implementation of Cross-Entropy Loss
-    Tensor *probs = tensorAlloc(scratch, output->rows, 1); // Temporary for calculation
+    Tensor *probs = tensorAlloc(scratch, output->rows, 1); // temp for calculation
     tensorSoftmax(probs, output);
     
     float probOfCorrect = probs->data[label];
@@ -30,11 +27,11 @@ Tensor* glueForward(Model *m, Tensor *input, Arena *scratch) {
         tensorDot(m->layers[i].z, m->layers[i].w, currentInput);
         tensorAdd(m->layers[i].z, m->layers[i].z, m->layers[i].b);
         
-        // Use ReLU for hidden, Softmax logic is handled in the Train function or final output
+        // use ReLU for hidden, Softmax logic is handled in training.
         if (i < m->count - 1) {
             tensorReLU(m->layers[i].a, m->layers[i].z);
         } else {
-            // For the very last layer, we can use raw for Softmax
+            // for the very last layer, we can use raw for Softmax (we could do it a different way...)
             // Softmax in gluePredict/Train will handle the probabilities.
             for(int j=0; j<m->layers[i].z->rows; j++) 
                 m->layers[i].a->data[j] = m->layers[i].z->data[j];
@@ -51,16 +48,15 @@ int gluePredict(Model *m, Tensor *input, Arena *scratch, float *outConfidence) {
     tensorSoftmax(probs, output);
 
     int guess = 0;
-    for (int i = 1; i < probs->rows; i++) {
+    for (int i = 1; i < probs->rows; i++) 
         if (probs->data[i] > probs->data[guess]) guess = i;
-    }
     
     if (outConfidence) *outConfidence = probs->data[guess];
     return guess;
 }
 
 void glueTrainDigit(Model *m, float *rawData, int label, float lr, float noiseLevel, Arena *scratch) {
-    // 1. Prepare Input and apply Data Augmentation (Noise)
+    // 1. prepare Input and apply Data Augmentation (Noise)
     Tensor *input = tensorAlloc(scratch, m->layers[0].w->cols, 1);
     for(int i = 0; i < input->rows; i++) {
         float val = rawData[i];
@@ -68,13 +64,13 @@ void glueTrainDigit(Model *m, float *rawData, int label, float lr, float noiseLe
         input->data[i] = val;
     }
 
-    // 2. Forward Pass
+    // 2. forward pass
     Tensor *output = glueForward(m, input, scratch);
     Tensor *probs = tensorAlloc(scratch, output->rows, 1);
     tensorSoftmax(probs, output);
 
-    // 3. Backward Pass (Generic Loop)
-    // Initialize output delta (Softmax + Cross-Entropy shortcut)
+    // 3. backward pass
+    // init output delta (softmax + cross-entropy "shortcut")
     Tensor *delta = tensorAlloc(scratch, output->rows, 1);
     for (int i = 0; i < output->rows; i++) {
         float target = (i == label) ? 1.0f : 0.0f;
@@ -84,7 +80,7 @@ void glueTrainDigit(Model *m, float *rawData, int label, float lr, float noiseLe
     for (int i = m->count - 1; i >= 0; i--) {
         Tensor *prevA = (i == 0) ? input : m->layers[i-1].a;
         
-        // Update Weights and Biases for current layer
+        // update weights and biases for current layer
         for (int r = 0; r < m->layers[i].w->rows; r++) {
             for (int c = 0; c < m->layers[i].w->cols; c++) {
                 int idx = r * m->layers[i].w->cols + c;
@@ -92,7 +88,7 @@ void glueTrainDigit(Model *m, float *rawData, int label, float lr, float noiseLe
                 // L2 regularization: add lambda * weight to gradient
                 float grad = (delta->data[r] * prevA->data[c]) + (LAMBDA * m->layers[i].w->data[idx]);
                 
-                // Gradient clipping to prevent exploding gradients
+                // gradient clipping to prevent exploding gradients
                 if (grad > GRAD_CLIP) grad = GRAD_CLIP;
                 if (grad < -GRAD_CLIP) grad = -GRAD_CLIP;
 
@@ -101,17 +97,16 @@ void glueTrainDigit(Model *m, float *rawData, int label, float lr, float noiseLe
             m->layers[i].b->data[r] -= lr * delta->data[r];
         }
 
-        // Propagate error to previous layer using ReLU derivative
+        // propagate error to previous layer using ReLU derivative
         if (i > 0) {
             Tensor *upstreamDelta = tensorAlloc(scratch, m->layers[i-1].a->rows, 1);
             for (int j = 0; j < m->layers[i].w->cols; j++) {
                 float error = 0;
-                for (int k = 0; k < m->layers[i].w->rows; k++) {
+                for (int k = 0; k < m->layers[i].w->rows; k++) 
                     error += m->layers[i].w->data[k * m->layers[i].w->cols + j] * delta->data[k];
-                }
                 upstreamDelta->data[j] = error;
             }
-            // ReLU Derivative: chain error only if neuron was active (z > 0)
+            // ReLU Derivative: chain error **only** if neuron was active (z > 0)
             Tensor *nextDelta = tensorAlloc(scratch, m->layers[i-1].a->rows, 1);
             tensorReLUDerivative(nextDelta, m->layers[i-1].z, upstreamDelta);
             delta = nextDelta;

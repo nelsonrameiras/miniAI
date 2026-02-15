@@ -1,6 +1,7 @@
 #include "../AIHeader.h"
 #include "../headers/TestDriver.h"
 #include "../IO/alphabet.h" 
+#include "../IO/digits.h"
 
 static const char *ALPHA_MAP = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 static const char *DIGIT_MAP = "0123456789";
@@ -30,6 +31,7 @@ int main(int argc, char **argv) {
     if (argc > 1 && strcmp(argv[1], "bench") == 0) {
         if ((argv[2] && strcmp(argv[2], "digits") != 0) || argv[3]) 
             g_trainConfig.benchmarkReps = argv[3] ? atoi(argv[3]) : atoi(argv[2]);
+        if (g_trainConfig.benchmarkReps <= 0) g_trainConfig.benchmarkReps = BENCHMARK_REPETITIONS;
         runBenchmarkSuite(perm, scratch, cfg);
         arenaFree(perm); arenaFree(scratch);
         return 0;

@@ -607,10 +607,9 @@ Smart initialization based on layer size (see [Xavier/He Initialization](http://
 
 ```c
 void tensorFillXavier(Tensor *t, int inSize) {
-    float limit = sqrtf(6.0f / (float)inSize);
-    for (int i = 0; i < t->rows * t->cols; i++) {
-        t->data[i] = ((float)rand() / RAND_MAX) * 2 * limit - limit;
-    }
+    float scale = sqrtf(2.0f / (float)inSize);
+    for (int i = 0; i < t->rows * t->cols; i++)
+        t->data[i] = (((float)rand() / (float)RAND_MAX) * 2.0f - 1.0f) * scale;
 }
 ```
 

@@ -2,9 +2,57 @@ from PIL import Image, ImageDraw, ImageFont
 import os
 import sys
 
+## Thank you, Chat GPT. I did not have the patience to do this.
+## I only tuned this.
+
 CHAR_SIZE = 16
 MARGIN_RATIO = 0.85
 OUTPUT_DIR = "IO/testPhrases"
+
+def main():
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    
+    # Test phrases to generate - 16x16 for alphanumeric
+    randomS = "".join(__import__('random').choices("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", k=50))
+    phrases_alpha = [
+        ("HELLO", "hello_train.png", 16),
+        ("WORLD", "world_train.png", 16),
+        ("Test123", "mixed_train.png", 16),
+        ("HELLO WORLD", "hello_world_train.png", 16),
+        ("ABC abc 123", "full_test_train.png", 16),
+        ("AEDproject", "aed_train.png", 16),
+        ("NeLsOn e Eng RaFeIrO", "nelraf.png", 16),
+        ("a1b2C3D4f5C 6 7 fF gG9HjitI HNijk", "crazy1.png", 16),
+        ("CrAzY xYz 987 QwErTy", "crazy_train.png", 16),
+        (randomS, "crazy2.png", 16),
+    ]
+    
+    # Digit phrases - 8x8 for digit model
+    phrases_digits = [
+        ("12345", "digits_train.png", 8),
+        ("67890", "digits2_train.png", 8),
+        ("0123456789", "all_digits_train.png", 8),
+    ]
+    
+    all_phrases = phrases_alpha + phrases_digits
+    
+    # Also accept command line arguments
+    if len(sys.argv) > 1:
+        custom_phrase = " ".join(sys.argv[1:])
+        safe_name = custom_phrase.replace(" ", "_")[:20] + "_train.png"
+        # Default to 16x16 for custom phrases
+        all_phrases = [(custom_phrase, safe_name, 16)]
+    
+    for phrase, filename, char_size in all_phrases:
+        img = generate_phrase_image(phrase, char_size=char_size)
+        filepath = os.path.join(OUTPUT_DIR, filename)
+        img.save(filepath)
+        print(f"Generated: {filepath} ({img.width}x{img.height}, {char_size}x{char_size} chars) - '{phrase}'")
+    
+    print(f"\nGenerated {len(all_phrases)} phrase images in '{OUTPUT_DIR}/'")
+    print("\nUsage:")
+    print("  ./testDriverPhrase IO/testPhrases/hello_train.png")
+    print("  ./testDriverPhrase IO/testPhrases/digits_train.png digits")
 
 def load_font(size):
     """Load font with fallbacks - same as training script"""
@@ -255,51 +303,6 @@ def generate_phrase_image(phrase, char_size=CHAR_SIZE, spacing=2):
     phrase_img = phrase_img.point(lambda x: 0 if x < 128 else 255)
     
     return phrase_img
-
-def main():
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-    
-    # Test phrases to generate - 16x16 for alphanumeric
-    randomS = "".join(__import__('random').choices("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", k=50))
-    phrases_alpha = [
-        ("HELLO", "hello_train.png", 16),
-        ("WORLD", "world_train.png", 16),
-        ("Test123", "mixed_train.png", 16),
-        ("HELLO WORLD", "hello_world_train.png", 16),
-        ("ABC abc 123", "full_test_train.png", 16),
-        ("AEDproject", "aed_train.png", 16),
-        ("NeLsOn e Eng RaFeIrO", "nelraf.png", 16),
-        ("a1b2C3D4f5C 6 7 fF gG9HjitI HNijk", "crazy1.png", 16),
-        ("CrAzY xYz 987 QwErTy", "crazy_train.png", 16),
-        (randomS, "crazy2.png", 16),
-    ]
-    
-    # Digit phrases - 8x8 for digit model
-    phrases_digits = [
-        ("12345", "digits_train.png", 8),
-        ("67890", "digits2_train.png", 8),
-        ("0123456789", "all_digits_train.png", 8),
-    ]
-    
-    all_phrases = phrases_alpha + phrases_digits
-    
-    # Also accept command line arguments
-    if len(sys.argv) > 1:
-        custom_phrase = " ".join(sys.argv[1:])
-        safe_name = custom_phrase.replace(" ", "_")[:20] + "_train.png"
-        # Default to 16x16 for custom phrases
-        all_phrases = [(custom_phrase, safe_name, 16)]
-    
-    for phrase, filename, char_size in all_phrases:
-        img = generate_phrase_image(phrase, char_size=char_size)
-        filepath = os.path.join(OUTPUT_DIR, filename)
-        img.save(filepath)
-        print(f"Generated: {filepath} ({img.width}x{img.height}, {char_size}x{char_size} chars) - '{phrase}'")
-    
-    print(f"\nGenerated {len(all_phrases)} phrase images in '{OUTPUT_DIR}/'")
-    print("\nUsage:")
-    print("  ./testDriverPhrase IO/testPhrases/hello_train.png")
-    print("  ./testDriverPhrase IO/testPhrases/digits_train.png digits")
 
 if __name__ == "__main__":
     main()

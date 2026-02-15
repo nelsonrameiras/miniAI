@@ -68,19 +68,16 @@ uint8_t calculateOtsuThreshold(uint8_t *gray, int totalPixels) {
         }
     }
 
-    // For binary images (only 2 values), threshold needs adjustment
-    // If threshold equals the minimum value, we need to use threshold+1
-    // to ensure pixels AT the threshold are classified as foreground
-    // This handles the edge case where Otsu returns 0 for black/white images
+    // for binary images (only 2 values), threshold needs adjustment
+    // if threshold equals the min value, we need to use threshold+1
+    // to ensure pixels AT!! the threshold are classified as foreground
+    // this handles the edge case where Otsu returns 0 for black/white images
     if (threshold < 255 && histogram[threshold] > 0) {
-        // Check if this is effectively a binary image
+        // check if this is effectively a binary image
         int nonZeroLevels = 0;
-        for (int i = 0; i < 256; i++) {
-            if (histogram[i] > 0) nonZeroLevels++;
-        }
-        if (nonZeroLevels <= 2) {
-            threshold++;  // Shift threshold to include the lower value as foreground
-        }
+        for (int i = 0; i < 256; i++) if (histogram[i] > 0) nonZeroLevels++;
+        if (nonZeroLevels <= 2) 
+            threshold++;  // shift threshold to include the lower value as foreground
     }
 
     return threshold;
@@ -144,18 +141,16 @@ static uint8_t* extractAndCenter(uint8_t *gray, int width, int height, uint8_t t
     int letterW = bbox.right - bbox.left + 1;
     int letterH = bbox.bottom - bbox.top + 1;
 
-    // Calculate center of mass for proper centering
+    // calc center of mass for proper centering
     float sumX = 0, sumY = 0;
     int count = 0;
-    for (int y = bbox.top; y <= bbox.bottom; y++) {
-        for (int x = bbox.left; x <= bbox.right; x++) {
-            if (gray[y * width + x] < threshold) {  // Foreground pixel
+    for (int y = bbox.top; y <= bbox.bottom; y++) 
+        for (int x = bbox.left; x <= bbox.right; x++)
+            if (gray[y * width + x] < threshold) {  // foreground pixel
                 sumX += (x - bbox.left);
                 sumY += (y - bbox.top);
                 count++;
             }
-        }
-    }
     
     float comX, comY;
     if (count > 0) {
@@ -173,14 +168,14 @@ static uint8_t* extractAndCenter(uint8_t *gray, int width, int height, uint8_t t
 
     uint8_t *square = malloc(squareSize * squareSize);
     if (!square) return NULL;
-    memset(square, 255, squareSize * squareSize);  // White background
+    memset(square, 255, squareSize * squareSize);  // white bgr
 
-    // Center by center of mass (NOT bbox center)
+    // center by center of mass (NOT bbox center)
     float squareCenter = squareSize / 2.0f;
     int offsetX = (int)(squareCenter - comX);
     int offsetY = (int)(squareCenter - comY);
 
-    for (int y = bbox.top; y <= bbox.bottom; y++) {
+    for (int y = bbox.top; y <= bbox.bottom; y++) 
         for (int x = bbox.left; x <= bbox.right; x++) {
             int destX = (x - bbox.left) + offsetX;
             int destY = (y - bbox.top) + offsetY;
@@ -188,7 +183,6 @@ static uint8_t* extractAndCenter(uint8_t *gray, int width, int height, uint8_t t
                 square[destY * squareSize + destX] = gray[y * width + x];
             }
         }
-    }
 
     *outSize = squareSize;
     return square;

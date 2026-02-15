@@ -4,6 +4,7 @@
 #include "../AIHeader.h"
 #include <string.h>
 #include <math.h>
+#include "../IO/digits.h"
 
 // simpler testDriver, only for digits.
 
@@ -41,7 +42,9 @@ int main(int argc, char **argv) {
 
     // "./mini_ai_demo run" loads, otherwise it trains
     if (argc > 1 && strcmp(argv[1], "run") == 0) {
-        modelLoad(model, "IO/models/digit_brain.bin");
+        if (modelLoad(model, "IO/models/digit_brain.bin") == -1) {
+            fprintf(stderr, "Failed to load model from IO/models/digit_brain.bin\n"); arenaFree(perm); arenaFree(scratch); return 1;
+        }
     } else {
         trainModel(model, digits, scratch);
     }
@@ -265,7 +268,7 @@ static void applyBestParameters(int bestH, float bestL) {
     if (f) {
         fprintf(f, "%d\n%f", bestH, bestL);
         fclose(f);
-        printf("\nOptimized parameters saved in 'best_config.txt'\n");
+        printf("\nOptimized parameters saved in 'best_config_simple.txt'\n");
     }
 }
 

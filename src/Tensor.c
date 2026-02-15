@@ -16,7 +16,7 @@ Tensor* tensorAlloc(Arena *arena, int rows, int cols) {
 }
 
 void tensorDot(Tensor *out, Tensor *a, Tensor *b) {
-    // Validate dimensions: a->cols must equal b->rows for matrix multiplication
+    // validate dims: a->cols must equal b->rows for matrix multiplication
     if (a->cols != b->rows) { fprintf(stderr, "Error: tensorDot dimension mismatch: a(%d×%d) x b(%d×%d)\n", a->rows, a->cols, b->rows, b->cols); return; }
     
     for (int i = 0; i < a->rows; i++) {

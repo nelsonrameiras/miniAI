@@ -3,6 +3,8 @@
 #include <string.h>
 #include <stdio.h>
 
+// I was kind of lazy with the failure cleanups... ought be improved in the future.
+
 Arena* arenaInit(size_t capacity) {
     Arena *arena = (Arena*)malloc(sizeof(Arena));
     if (!arena) { fprintf(stderr, "Error: Failed to allocate Arena struct\n"); return NULL; }
