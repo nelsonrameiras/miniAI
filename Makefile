@@ -1,6 +1,7 @@
 # Compiler and Flags
 CC = gcc
-CFLAGS = -Wall -Wextra -O3 -I./headers -I./headers/core -I./headers/cli -I./headers/dataset -I./headers/image -I./headers/utils -I./IO/external
+CFLAGS = -Wall -Wextra -O3 -I./headers -I./headers/core -I./headers/cli -I./headers/dataset \
+	-MMD -MP -I./headers/image -I./headers/utils -I./IO/external
 LIBS = -lm
 
 # Directories
@@ -236,3 +237,5 @@ help:
 .PHONY: all clean clean-models clean-configs clean-all rebuild run train \\
 	train-digits train-png test test-static test-png test-image benchmark \\
 	benchmark-png recognize recognize-phrase structure loc help
+
+-include $(OBJ_ALL:.o=.d)

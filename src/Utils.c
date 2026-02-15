@@ -3,7 +3,7 @@
 #include <math.h>
 
 // Helper: Renders gridSide x gridSide grid
-void printDigit(float *data, int gridSide) {
+void printDigit(const float *data, const int gridSide) {
     int totalPixels = gridSide * gridSide;
     for (int i = 0; i < totalPixels; i++) {
         printf("%s", data[i] > 0.5f ? "## " : ".. ");
