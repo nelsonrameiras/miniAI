@@ -1,24 +1,6 @@
 #ifndef AI_HEADER_H
 #define AI_HEADER_H
 
-// Core ADTs
-#include "headers/Arena.h"
-#include "headers/Tensor.h"
-#include "headers/Grad.h"
-#include "headers/Model.h"
-#include "headers/Glue.h"
-#include "headers/Utils.h"
-#include "headers/ImageLoader.h"
-#include "headers/ImagePreprocess.h"
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-#include <string.h>
-#include <math.h>
-#include <dirent.h>
-#include <sys/stat.h>
-
 // --- Network Architecture Defaults ---
 #define DEFAULT_HIDDEN  1024     // default hidden layer neurons
 
