@@ -651,7 +651,7 @@ I ran into some of these in development, so I will leave some caveats here:
 
 #### 1. Low Accuracy
 - **Cause**: Inadequate learning rate.
-- **Solution**: Run `./testDriver bench` to find optimal LR (it will be auto applied (saved into IO/confs/best_config_*.txt and read in training (if it exists))).
+- **Solution**: Run `./testDriver bench` to find optimal LR (it will be auto applied (saved into IO/configs/best_config_*.txt and read in training (if it exists))).
 
 #### 2. Model Load Fails
 ```

@@ -1,5 +1,6 @@
 #include <stdio.h>
-#include "../AIHeader.h"
+#include <stdlib.h>
+#include <math.h>
 
 // Helper: Renders gridSide x gridSide grid
 void printDigit(float *data, int gridSide) {
