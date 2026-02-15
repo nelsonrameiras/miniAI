@@ -71,12 +71,19 @@ int cmdTrain(CommandArgs args) {
     }
     
     // Load best configuration if available
-    char configFile[256];
-    const char *datasetName = args.dataset == DATASET_SPEC_DIGITS ? "digits" : "alpha";
-    const char *datasetType = args.useStatic ? "static" : "png";
-    snprintf(configFile, sizeof(configFile), "IO/configs/best_config_%s_%s.txt",
-             datasetName, datasetType);
-    loadBestConfig(configFile);
+    const char *configFileToLoad = args.configFile;
+    char generatedConfig[256];
+
+    // If the user did not pass the flag --config, we gen the default best configuration path
+    if (!configFileToLoad) {
+        const char *datasetName = args.dataset == DATASET_SPEC_DIGITS ? "digits" : "alpha";
+        const char *datasetType = args.useStatic ? "static" : "png";
+        snprintf(generatedConfig, sizeof(generatedConfig), "IO/configs/best_config_%s_%s.txt",
+                 datasetName, datasetType);
+        configFileToLoad = generatedConfig;
+    }
+    
+    loadBestConfig(configFileToLoad);
     
     // Create model
     int dims[] = {ds->inputSize, g_trainConfig.hiddenSize, ds->outputSize};

@@ -42,6 +42,9 @@ Tensor* glueForward(Model *m, Tensor *input, Arena *scratch) {
 }
 
 int gluePredict(Model *m, Tensor *input, Arena *scratch, float *outConfidence) {
+    // initial memory pointer
+    size_t startPos = scratch->used;
+
     Tensor *output = glueForward(m, input, scratch);
     
     Tensor *probs = tensorAlloc(scratch, output->rows, 1);
@@ -52,6 +55,10 @@ int gluePredict(Model *m, Tensor *input, Arena *scratch, float *outConfidence) {
         if (probs->data[i] > probs->data[guess]) guess = i;
     
     if (outConfidence) *outConfidence = probs->data[guess];
+
+    // rewind the memory: implicitly throw away the intermediate tensors gen by glueForward and softmax (memory improvement)
+    scratch->used = startPos;
+
     return guess;
 }
 
