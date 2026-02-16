@@ -95,7 +95,7 @@ $(OBJDIR)/MemoryDatasets.o: $(IODIR)/MemoryDatasets.c | $(OBJDIR)
 
 # Link main executable
 $(TARGET): $(OBJ_ALL)
-	$(CC) $(CFLAGS) $^ -o $@ $(LIBS)
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(LIBS)
 	@echo ""
 	@echo "========================================"
 	@echo "  miniAI built successfully!"
