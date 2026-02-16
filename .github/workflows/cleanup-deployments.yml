@@ -1,4 +1,4 @@
-name: Delete Old Deployments
+name: Safe Deployment Cleanup
 
 on:
   push:
@@ -10,13 +10,88 @@ permissions:
 
 jobs:
   cleanup:
-    name: Cleanup Deployments
+    name: Cleanup Old Deployments (Safe)
     runs-on: ubuntu-latest
     
     steps:
-    - name: Delete old deployments
-      uses: strumwolf/delete-deployment-environment@v2
+    - name: Delete old deployments (keep active)
+      uses: actions/github-script@v7
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        environment: github-pages
-        onlyRemoveDeployments: true
+        script: |
+          console.log('Fetching all deployments...');
+          
+          const deployments = await github.rest.repos.listDeployments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            per_page: 100
+          });
+          
+          console.log(`Found ${deployments.data.length} total deployments`);
+          
+          // Get status of each deployment
+          const deploymentsWithStatus = await Promise.all(
+            deployments.data.map(async (deployment) => {
+              const statuses = await github.rest.repos.listDeploymentStatuses({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                deployment_id: deployment.id
+              });
+              
+              // Get the most recent status
+              const latestStatus = statuses.data[0]?.state || 'unknown';
+              
+              return {
+                ...deployment,
+                currentStatus: latestStatus
+              };
+            })
+          );
+          
+          // Separate active and inactive deployments
+          const activeDeployments = deploymentsWithStatus.filter(
+            d => d.currentStatus === 'success' || d.currentStatus === 'queued' || d.currentStatus === 'in_progress'
+          );
+          
+          const inactiveDeployments = deploymentsWithStatus.filter(
+            d => d.currentStatus === 'inactive' || d.currentStatus === 'error' || d.currentStatus === 'failure'
+          );
+          
+          console.log(`Active deployments: ${activeDeployments.length}`);
+          console.log(`Inactive deployments: ${inactiveDeployments.length}`);
+          
+          // Only delete inactive deployments
+          let deletedCount = 0;
+          
+          for (const deployment of inactiveDeployments) {
+            try {
+              console.log(`Deleting inactive deployment ${deployment.id} (status: ${deployment.currentStatus})...`);
+              
+              await github.rest.repos.deleteDeployment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                deployment_id: deployment.id
+              });
+              
+              console.log(`OK Deleted deployment ${deployment.id}`);
+              deletedCount++;
+            } catch (error) {
+              console.log(`NOT OK Could not delete deployment ${deployment.id}: ${error.message}`);
+            }
+          }
+          
+          console.log('');
+          console.log('=== Cleanup Summary ===');
+          console.log(`Total deployments: ${deployments.data.length}`);
+          console.log(`Active (kept): ${activeDeployments.length}`);
+          console.log(`Inactive (deleted): ${deletedCount}`);
+          console.log('');
+          console.log('Active deployments preserved - GitHub Pages still working!');
+    
+    - name: Summary
+      run: |
+        echo "# Safe Deployment Cleanup" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Active deployments preserved**" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "Only inactive/failed deployments were deleted." >> $GITHUB_STEP_SUMMARY
+        echo "Your GitHub Pages site is still live!" >> $GITHUB_STEP_SUMMARY

@@ -1095,4 +1095,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-*For questions, suggestions or bugs, please open an [issue](https://github.com/nelsonramosua/miniAI/issues).*
+*For questions, suggestions or bugs, please open an [issue](https://github.com/nelsonramosua/miniAI/issues).* 
