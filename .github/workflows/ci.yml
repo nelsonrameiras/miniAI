@@ -52,7 +52,7 @@ jobs:
         if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
           make CC=${{ matrix.cc }} CFLAGS="-Wall -Wextra -O3 -march=native -fopenmp"
         else
-          make CC=${{ matrix.cc }} CFLAGS="-Wall -Wextra -O3 -march=native" LDFLAGS-=lgomp
+          make CC=${{ matrix.cc }} CFLAGS="-Wall -Wextra -O3 -march=native" LDFLAGS-="lgomp"
         fi
       env:
         CC: ${{ matrix.cc }}
