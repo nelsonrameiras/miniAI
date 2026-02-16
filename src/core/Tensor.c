@@ -1,4 +1,4 @@
-#include "../headers/core/Tensor.h"
+#include "../../headers/core/Tensor.h"
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>

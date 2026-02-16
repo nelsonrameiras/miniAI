@@ -1,4 +1,4 @@
-#include "../headers/core/Grad.h"
+#include "../../headers/core/Grad.h"
 #include <math.h>
 
 float sigmoidDerivative(float x) {

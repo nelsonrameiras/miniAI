@@ -1,6 +1,6 @@
-#include "../headers/core/Glue.h"
-#include "../headers/core/Grad.h"
-#include "../AIHeader.h"
+#include "../../headers/core/Glue.h"
+#include "../../headers/core/Grad.h"
+#include "../../AIHeader.h"
 #include <stdlib.h>
 #include <math.h>
 

@@ -1,4 +1,4 @@
-#include "../headers/core/Model.h"
+#include "../../headers/core/Model.h"
 #include <stdlib.h>
 #include <math.h>
 #include <stdio.h>
