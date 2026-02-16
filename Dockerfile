@@ -45,7 +45,7 @@ RUN mkdir -p IO/models IO/configs IO/images
 RUN chmod +x miniAI
 
 # Create non-root user
-RUN useradd -m -u 1000 miniaiuser && \
+RUN useradd -m miniaiuser && \
     chown -R miniaiuser:miniaiuser /app
 USER miniaiuser
 
