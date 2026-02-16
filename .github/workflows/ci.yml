@@ -316,7 +316,7 @@ jobs:
         if [ -d "IO/images/digitsPNG" ] && [ "$(ls -A IO/images/digitsPNG)" ]; then
           echo "=== Testing PNG Digits Workflow ==="
           ./miniAI train --dataset digits --data
-          ./miniAI test --model IO/models/digit_brain_png.bin --dataset digits --data
+          ./miniAI test --dataset digits --data
         else
           echo "PNG digits directory not found or empty, skipping"
         fi

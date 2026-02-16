@@ -133,7 +133,7 @@ jobs:
                  --track-origins=yes \
                  --verbose \
                  --log-file=valgrind.log \
-                 ./miniAI help
+                 ./miniAI train --dataset digits
       continue-on-error: true
     
     - name: Check for leaks

@@ -1,5 +1,10 @@
 name: Release
 
+permissions:
+  contents: read
+  packages: write
+  security-events: write
+
 on:
   push:
     tags:
@@ -29,7 +34,7 @@ jobs:
             artifact: miniAI-linux-x64
           - os: macos-latest
             platform: macos
-            cc: clang
+            cc: gcc
             artifact: miniAI-macos-x64
     
     steps:
@@ -51,13 +56,36 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential zip
         elif [ "$RUNNER_OS" == "macOS" ]; then
-          brew install gcc make zip
+          brew install gcc make coreutils zip
         fi
+
+    - name: Install OpenMP (macOS)
+      if: runner.os == 'macOS'
+      run: brew install libomp
+
+    - name: Set OpenMP flags (macOS)
+      if: runner.os == 'macOS'
+      run: |
+        echo "LDFLAGS=-L/opt/homebrew/opt/libomp/lib" >> $GITHUB_ENV
+        echo "CPPFLAGS=-I/opt/homebrew/opt/libomp/include" >> $GITHUB_ENV
     
     - name: Build optimized release
       run: |
         make clean
         make CC=${{ matrix.cc }} CFLAGS="-Wall -Wextra -O3 -DNDEBUG"
+
+    - name: Build optimized release
+      run: |
+        make clean
+        if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
+          make CC=${{ matrix.cc }} CFLAGS="-Wall -Wextra -O3 -DNDEBUG -fopenmp" LIBS="-lm -lgomp"
+        else
+          make CC=${{ matrix.cc }} CFLAGS="-Wall -Wextra -O3 -DNDEBUG -Xpreprocessor -fopenmp $CPPFLAGS" LIBS="-lm -lomp $LDFLAGS"
+        fi
+      env:
+        CC: ${{ matrix.cc }}
+        LDFLAGS: ${{ env.LDFLAGS }}
+        CPPFLAGS: ${{ env.CPPFLAGS }}
     
     - name: Strip binary
       run: |
