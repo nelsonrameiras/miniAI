@@ -11,7 +11,7 @@ COPY . .
 
 # Build miniAI with optimizations
 RUN make clean && \
-    make CFLAGS="-Wall -Wextra -O3 -DNDEBUG" && \
+    make CFLAGS="-Wall -Wextra -O3 -DNDEBUG -fopenmp" LIBS="-lm -lgomp" && \
     strip miniAI
 
 # Stage 2: Runtime
@@ -25,8 +25,7 @@ LABEL org.opencontainers.image.source="https://github.com/nelsonramosua/miniAI"
 # Install minimal runtime dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    libm6 \
-    ca-certificates && \
+    libgomp1 && \
     rm -rf /var/lib/apt/lists/*
 
 # Create app directory
