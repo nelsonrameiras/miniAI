@@ -49,7 +49,11 @@ jobs:
     - name: Build miniAI
       run: |
         make clean
-        make CC=${{ matrix.cc }}
+        if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
+          make CC=${{ matrix.cc }} CFLAGS="-Wall -Wextra -O3 -march=native -fopenmp"
+        else
+          make CC=${{ matrix.cc }} CFLAGS="-Wall -Wextra -O3 -march=native"
+        fi
       env:
         CC: ${{ matrix.cc }}
     
