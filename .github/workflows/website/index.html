@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page.title | default: site.title }}</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <h1>{{ site.title }}</h1>
+            <p>{{ site.description }}</p>
+
+            <div class="badges">
+                <img src="https://img.shields.io/badge/language-C-blue.svg" alt="Language">
+                <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License">
+            </div>
+
+            <!-- Navigation -->
+            <nav>
+                <ul class="navigation">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="readme.html">README (Docs)</a></li>
+                    <li><a href="quickstart.html">Quick Start</a></li>
+                    <li><a href="api.html">API Reference</a></li>
+                    <li><a href="architecture.html">Architecture</a></li>
+                    <li><a href="contributing.html">Contributing</a></li>
+                </ul>
+            </nav>
+
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
+                <a href="https://github.com/nelsonramosua/miniAI" style="color: #666; font-size: 14px; text-decoration: none;">
+                    View on GitHub.
+                </a>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="content">
+            {% if content %}
+                {{ content }}
+            {% else %}
+                <h1>Welcome to miniAI</h1>
+                <p>Select a section from the sidebar to explore the documentation.</p>
+                <p>miniAI is a lightweight, dependency-free neural network implementation designed for learning and OCR tasks.</p>
+            {% endif %}
+
+            <div class="footer" style="margin-top: 50px; border-top: 1px solid #eee; padding-top: 20px;">
+                <p>miniAI - Educational neural network in pure C</p>
+                <p>Created by <a href="https://github.com/nelsonramosua">Nelson Ramos</a> |
+                    <a href="https://github.com/nelsonramosua/miniAI/blob/main/LICENSE">MIT License</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
