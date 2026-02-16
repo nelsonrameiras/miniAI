@@ -1063,22 +1063,19 @@ See Contributing section below for detailed guidelines.
 
 ## Contributing
 
-Contributions are welcome! Please:
+Contributions are welcome! This project has automated CI/CD.
 
-1. Fork the repository.
-2. Create a branch for your feature (`git checkout -b feature/newFeature`).
-3. Commit your changes (`git commit -m 'Add some newFeature'`).
-4. Push to the branch (`git push origin feature/newFeature`).
-5. Open a Pull Request, which I will, then, analyze and approve.
+### Automated Checks 
+- Build on Linux and macOS
+- Run tests
+- Check code quality
 
-### Guidelines
+### Templates
+- [Bug Reports](.github/IssueTemplates/bug_report.md)
+- [Feature Requests](.github/IssueTemplates/feature_request.md)
+- [Pull Requests](.github/pull_request_template.md)
 
-- Keep code clean and well documented.
-- Follow existing code style (important!).
-- Add tests for new features.
-- Update documentation.
-- Maintain zero-dependency philosophy.
-- Use arena allocator for memory management.
+For detailed guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
