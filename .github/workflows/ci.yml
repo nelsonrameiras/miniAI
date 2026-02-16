@@ -50,9 +50,9 @@ jobs:
       run: |
         make clean
         if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
-          make CC=${{ matrix.cc }} CFLAGS="-Wall -Wextra -O3 -march=native -fopenmp"
+          make CC=${{ matrix.cc }} CFLAGS="-Wall -Wextra -O3 -march=native -fopenmp" LDFLAGS="-lm -lgomp"
         else
-          make CC=${{ matrix.cc }} CFLAGS="-Wall -Wextra -O3 -march=native" LDFLAGS-="lgomp"
+          make CC=${{ matrix.cc }} CFLAGS="-Wall -Wextra -O3 -march=native" LDFLAGS="-lm"
         fi
       env:
         CC: ${{ matrix.cc }}
