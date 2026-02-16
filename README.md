@@ -2,6 +2,7 @@
 
 [![Language](https://img.shields.io/badge/language-C-blue.svg)](https://devdocs.io/c/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+![CI/CD Pipeline](https://github.com/nelsonramosua/miniAI/workflows/CI%2FCD%20Pipeline/badge.svg)
 
 **miniAI** is an educational implementation of an artificial neural network built entirely from scratch in pure C, with no external machine learning library dependencies. The project demonstrates the fundamentals of deep learning through a complete feed-forward architecture, including forward propagation, backpropagation, L2 regularization, gradient clipping, and hyperparameter optimization.
 
@@ -1015,6 +1016,7 @@ For those of you who are Python masters, which I'm definitely not.
    - CSV/NPY format.
 
 ### How to Contribute
+
 
 To add new features:
 

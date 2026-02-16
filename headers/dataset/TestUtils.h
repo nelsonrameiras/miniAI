@@ -1,9 +1,9 @@
 #ifndef TEST_UTILS_H
 #define TEST_UTILS_H
 
-#include "Model.h"
+#include "../core/Model.h"
 #include "Dataset.h"
-#include "Arena.h"
+#include "../core/Arena.h"
 
 // Training functions
 void trainModel(Model *model, Dataset *ds, Arena *scratch);

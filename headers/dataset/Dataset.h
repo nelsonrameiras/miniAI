@@ -1,8 +1,8 @@
 #ifndef _DATASET_H
 #define _DATASET_H
 
-#include "Arena.h"
-#include "Segmenter.h"
+#include "../core/Arena.h"
+#include "../image/Segmenter.h"
 
 // Dataset type enumeration
 typedef enum {

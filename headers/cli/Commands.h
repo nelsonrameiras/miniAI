@@ -2,7 +2,7 @@
 #define _COMMANDS_H
 
 #include "ArgParse.h"
-#include "Arena.h"
+#include "../core/Arena.h"
 
 // Command execution functions
 int cmdTrain(CommandArgs args);
