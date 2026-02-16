@@ -1071,9 +1071,9 @@ Contributions are welcome! This project has automated CI/CD.
 - Check code quality
 
 ### Templates
-- [Bug Reports](.github/IssueTemplates/bug_report.md)
-- [Feature Requests](.github/IssueTemplates/feature_request.md)
-- [Pull Requests](.github/pull_request_template.md)
+- [Bug Reports](https://github.com/nelsonramosua/miniAI/issues/new?template=bug_report.md)
+- [Feature Requests](https://github.com/nelsonramosua/miniAI/issues/new?template=feature_request.md)
+- [Pull Requests](https://github.com/nelsonramosua/miniAI/pulls)
 
 For detailed guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md).
 

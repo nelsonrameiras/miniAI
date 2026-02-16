@@ -566,21 +566,21 @@ Contributors are recognized through:
 
 ### Project Resources
 
-- [README](../README.md) - Project overview
-- [Architecture](../README.md#technical-architecture) - Code structure
-- [Examples](../README.md#usage) - Usage examples
+- [README](README.md) - Project overview
+- [Architecture](README.md#technical-architecture) - Code structure
+- [Examples](README.md#usage) - Usage examples
 
 ## Questions?
 
 If anything is unclear:
-1. Check existing issues/discussions
-2. Read the documentation
-3. Ask in discussions
-4. Open an issue if it's a bug
+1. Check existing issues/discussions.
+2. Read the documentation.
+3. Ask in discussions.
+4. Open an issue if it's a bug.
 
 Thank you for contributing to miniAI!
 
 ---
 
 **Last updated**: 2026
-**License**: [LICENSE](../LICENSE)
+**License**: [LICENSE](LICENSE)
