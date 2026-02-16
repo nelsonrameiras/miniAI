@@ -43,7 +43,7 @@ jobs:
 
     - name: Install OpenMP (macOS)
       if: runner.os == 'macOS'
-      run: brew install libomp
+      run: brew install libomp coreutils
 
     - name: Set OpenMP flags (macOS)
       if: runner.os == 'macOS'
@@ -75,9 +75,17 @@ jobs:
         file miniAI
         ./miniAI help
     
+    - name: Create folders
+      run:  |
+        mkdir -p IO/models IO/configs
+    
     - name: Run quick training test (static)
       run: |
-        timeout 120 ./miniAI train --dataset digits --static || echo "Training test completed or timed out"
+        if [ "$RUNNER_OS" = "macOS" ]; then
+          gtimeout 120 ./miniAI train --dataset digits --static || echo "Training test completed or timed out"
+        else
+          timeout 120 ./miniAI train --dataset digits --static || echo "Training test completed or timed out"
+        fi
       continue-on-error: true
     
     - name: Check model was created
