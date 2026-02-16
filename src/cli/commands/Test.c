@@ -6,8 +6,8 @@
 #include "../../../headers/Utils.h"
 #include "../../../headers/image/ImageLoader.h"
 #include "../../../headers/image/ImagePreprocess.h"
-#include "../../AIHeader.h"
-#include "../../IO/MemoryDatasets.h"
+#include "../../../AIHeader.h"
+#include "../../../IO/MemoryDatasets.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

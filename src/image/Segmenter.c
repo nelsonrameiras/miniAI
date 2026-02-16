@@ -1,5 +1,5 @@
-#include "../headers/image/Segmenter.h"
-#include "../headers/image/ImagePreprocess.h"  // shared utility functions
+#include "../../headers/image/Segmenter.h"
+#include "../../headers/image/ImagePreprocess.h"  // shared utility functions
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>

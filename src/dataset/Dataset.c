@@ -1,6 +1,6 @@
-#include "../headers/dataset/Dataset.h"
-#include "../headers/image/ImageLoader.h"
-#include "../headers/image/ImagePreprocess.h"
+#include "../../headers/dataset/Dataset.h"
+#include "../../headers/image/ImageLoader.h"
+#include "../../headers/image/ImagePreprocess.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>

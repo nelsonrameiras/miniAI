@@ -1,7 +1,7 @@
-#include "../headers/dataset/TestUtils.h"
-#include "../headers/core/Glue.h"
-#include "../headers/Utils.h"
-#include "../AIHeader.h"
+#include "../../headers/dataset/TestUtils.h"
+#include "../../headers/core/Glue.h"
+#include "../../headers/Utils.h"
+#include "../../AIHeader.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
