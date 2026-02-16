@@ -7,6 +7,10 @@ on:
     branches: [ main, develop ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  security-events: write
+
 env:
   BUILD_TYPE: Release
 
@@ -38,18 +42,21 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential
         elif [ "$RUNNER_OS" == "macOS" ]; then
-          brew install gcc make
+          brew install gcc make coreutils
         fi
 
     - name: Install OpenMP (macOS)
       if: runner.os == 'macOS'
-      run: brew install libomp coreutils
+      run: brew install libomp
 
     - name: Set OpenMP flags (macOS)
       if: runner.os == 'macOS'
       run: |
         echo "LDFLAGS=-L/opt/homebrew/opt/libomp/lib" >> $GITHUB_ENV
         echo "CPPFLAGS=-I/opt/homebrew/opt/libomp/include" >> $GITHUB_ENV
+  
+    - name: "Create required directories"
+      run: mkdir -p IO/models IO/configs IO/testPhrases
     
     - name: Display compiler versions
       run: |
@@ -60,9 +67,9 @@ jobs:
       run: |
         make clean
         if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
-          make CC=${{ matrix.cc }} CFLAGS="-Wall -Wextra -O3 -march=native -fopenmp" LDFLAGS="-lm -lgomp"
+          make CC=${{ matrix.cc }} CFLAGS="-Wall -Wextra -O3 -march=native -fopenmp" LIBS="-lm -lgomp"
         else
-          make CC=${{ matrix.cc }} CFLAGS="-Wall -Wextra -O3 -march=native -Xpreprocessor -fopenmp $CPPFLAGS" LDFLAGS="-lm -lomp $LDFLAGS"
+          make CC=${{ matrix.cc }} CFLAGS="-Wall -Wextra -O3 -march=native -Xpreprocessor -fopenmp $CPPFLAGS" LIBS="-lm -lomp $LDFLAGS"
         fi
       env:
         CC: ${{ matrix.cc }}
@@ -81,11 +88,9 @@ jobs:
     
     - name: Run quick training test (static)
       run: |
-        if [ "$RUNNER_OS" = "macOS" ]; then
-          gtimeout 120 ./miniAI train --dataset digits --static || echo "Training test completed or timed out"
-        else
-          timeout 120 ./miniAI train --dataset digits --static || echo "Training test completed or timed out"
-        fi
+        CMD="timeout"
+        if [ "$RUNNER_OS" == "macOS" ]; then CMD="gtimeout"; fi
+        $CMD 120 ./miniAI train --dataset digits --static || echo "Training test completed or timed out"
       continue-on-error: true
     
     - name: Check model was created
@@ -104,7 +109,9 @@ jobs:
     
     - name: Run benchmark (quick)
       run: |
-        timeout 60 ./miniAI benchmark --dataset digits --static --reps 1 || echo "Benchmark completed or timed out"
+        CMD="timeout"
+        if [ "$RUNNER_OS" == "macOS" ]; then CMD="gtimeout"; fi
+        $CMD 60 ./miniAI benchmark --dataset digits --static --reps 1 || echo "Benchmark completed or timed out"
       continue-on-error: true
     
     - name: Archive build artifacts
@@ -229,7 +236,7 @@ jobs:
       continue-on-error: true
     
     - name: Upload Trivy results
-      uses: github/codeql-action/upload-sarif@v3
+      uses: github/codeql-action/upload-sarif@v4
       with:
         sarif_file: 'trivy-results.sarif'
       continue-on-error: true
@@ -243,6 +250,9 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+
+    - name: Create required directories
+      run: mkdir -p IO/models IO/configs
     
     - name: Build with optimizations
       run: |
@@ -283,6 +293,9 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+
+    - name: Create required directories
+      run: mkdir -p IO/models IO/configs IO/testPhrases
     
     - name: Download artifacts
       uses: actions/download-artifact@v4
