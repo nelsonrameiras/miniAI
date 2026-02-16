@@ -6,6 +6,10 @@ on:
     - cron: '0 2 * * *'
   workflow_dispatch:
 
+permissions:
+  contents: read
+  security-events: write
+
 jobs:
   # Nightly comprehensive build
   nightly-build:
@@ -21,20 +25,55 @@ jobs:
           - os: ubuntu-latest
             cc: gcc
           - os: macos-latest
-            cc: clang
+            cc: gcc
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
     
+
+    - name: Setup build environment
+      run: |
+        if [ "$RUNNER_OS" == "Linux" ]; then
+          sudo apt-get update
+          sudo apt-get install -y build-essential
+        elif [ "$RUNNER_OS" == "macOS" ]; then
+          brew install gcc make coreutils
+        fi
+
+    - name: Install OpenMP (macOS)
+      if: runner.os == 'macOS'
+      run: brew install libomp
+
+    - name: Set OpenMP flags (macOS)
+      if: runner.os == 'macOS'
+      run: |
+        echo "LDFLAGS=-L/opt/homebrew/opt/libomp/lib" >> $GITHUB_ENV
+        echo "CPPFLAGS=-I/opt/homebrew/opt/libomp/include" >> $GITHUB_ENV
+  
+    - name: "Create required directories"
+      run: mkdir -p IO/models IO/configs IO/testPhrases
+
     - name: Build (${{ matrix.build_type }})
       run: |
         make clean
-        if [ "${{ matrix.build_type }}" == "Debug" ]; then
-          make CC=${{ matrix.cc }} CFLAGS="-Wall -Wextra -g -O0 -DDEBUG"
+        if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
+          if [ "${{ matrix.build_type }}" = "Debug" ]; then
+            make CC=${{ matrix.cc }} CFLAGS="-Wall -Wextra -g -O0 -DDEBUG -fopenmp" LIBS="-lm -lgomp"
+          else
+            make CC=${{ matrix.cc }} CFLAGS="-Wall -Wextra -O3 -DNDEBUG -fopenmp" LIBS="-lm -lgomp"
+          fi
         else
-          make CC=${{ matrix.cc }} CFLAGS="-Wall -Wextra -O3 -DNDEBUG"
+          if [ "${{ matrix.build_type }}" = "Debug" ]; then
+            make CC=${{ matrix.cc }} CFLAGS="-Wall -Wextra -g -O0 -DDEBUG -Xpreprocessor -fopenmp $CPPFLAGS" LIBS="-lm -lomp $LDFLAGS"
+          else
+            make CC=${{ matrix.cc }} CFLAGS="-Wall -Wextra -O3 -DNDEBUG -Xpreprocessor -fopenmp $CPPFLAGS" LIBS="-lm -lomp $LDFLAGS"
+          fi
         fi
+            env:
+        CC: ${{ matrix.cc }}
+        LDFLAGS: ${{ env.LDFLAGS }}
+        CPPFLAGS: ${{ env.CPPFLAGS }}
     
     - name: Run comprehensive tests
       run: |
@@ -102,7 +141,7 @@ jobs:
         if grep -q "definitely lost: 0 bytes" valgrind.log; then
           echo "✓ No memory leaks detected"
         else
-          echo "⚠️ Potential memory leaks detected"
+          echo "Potential memory leaks detected"
           cat valgrind.log
         fi
       continue-on-error: true

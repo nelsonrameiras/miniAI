@@ -67,9 +67,9 @@ jobs:
       run: |
         make clean
         if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
-          make CC=${{ matrix.cc }} CFLAGS="-Wall -Wextra -O3 -march=native -fopenmp" LIBS="-lm -lgomp"
+          make CC=${{ matrix.cc }} CFLAGS="-Wall -Wextra -O3 -fopenmp" LIBS="-lm -lgomp"
         else
-          make CC=${{ matrix.cc }} CFLAGS="-Wall -Wextra -O3 -march=native -Xpreprocessor -fopenmp $CPPFLAGS" LIBS="-lm -lomp $LDFLAGS"
+          make CC=${{ matrix.cc }} CFLAGS="-Wall -Wextra -O3 -Xpreprocessor -fopenmp $CPPFLAGS" LIBS="-lm -lomp $LDFLAGS"
         fi
       env:
         CC: ${{ matrix.cc }}
@@ -257,7 +257,7 @@ jobs:
     - name: Build with optimizations
       run: |
         make clean
-        make CFLAGS="-Wall -Wextra -O3 -march=native"
+        make CFLAGS="-Wall -Wextra -O3"
     
     - name: Run comprehensive benchmark
       run: |
