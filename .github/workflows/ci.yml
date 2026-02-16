@@ -40,6 +40,10 @@ jobs:
         elif [ "$RUNNER_OS" == "macOS" ]; then
           brew install gcc make
         fi
+
+    - name: Install OpenMP (macOS)
+      if: runner.os == 'macOS'
+      run: brew install libomp
     
     - name: Display compiler versions
       run: |
@@ -52,7 +56,7 @@ jobs:
         if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
           make CC=${{ matrix.cc }} CFLAGS="-Wall -Wextra -O3 -march=native -fopenmp" LDFLAGS="-lm -lgomp"
         else
-          make CC=${{ matrix.cc }} CFLAGS="-Wall -Wextra -O3 -march=native" LDFLAGS="-lm"
+          make CC=${{ matrix.cc }} CFLAGS="-Wall -Wextra -O3 -march=native -Xpreprocessor -fopenmp" LDFLAGS="-lm -lomp"
         fi
       env:
         CC: ${{ matrix.cc }}
