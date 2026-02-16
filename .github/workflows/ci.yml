@@ -44,6 +44,12 @@ jobs:
     - name: Install OpenMP (macOS)
       if: runner.os == 'macOS'
       run: brew install libomp
+
+    - name: Set OpenMP flags (macOS)
+      if: runner.os == 'macOS'
+      run: |
+        echo "LDFLAGS=-L/opt/homebrew/opt/libomp/lib" >> $GITHUB_ENV
+        echo "CPPFLAGS=-I/opt/homebrew/opt/libomp/include" >> $GITHUB_ENV
     
     - name: Display compiler versions
       run: |
@@ -56,10 +62,12 @@ jobs:
         if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
           make CC=${{ matrix.cc }} CFLAGS="-Wall -Wextra -O3 -march=native -fopenmp" LDFLAGS="-lm -lgomp"
         else
-          make CC=${{ matrix.cc }} CFLAGS="-Wall -Wextra -O3 -march=native -Xpreprocessor -fopenmp" LDFLAGS="-lm -lomp"
+          make CC=${{ matrix.cc }} CFLAGS="-Wall -Wextra -O3 -march=native -Xpreprocessor -fopenmp $CPPFLAGS" LDFLAGS="-lm -lomp $LDFLAGS"
         fi
       env:
         CC: ${{ matrix.cc }}
+        LDFLAGS: ${{ env.LDFLAGS }}
+        CPPFLAGS: ${{ env.CPPFLAGS }}
     
     - name: Verify executable
       run: |
