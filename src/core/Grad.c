@@ -12,6 +12,7 @@ void tensorSigmoidPrime(Tensor *out, Tensor *in) {
 }
 
 void tensorReLUDerivative(Tensor *out, Tensor *z, Tensor *upstreamDelta) {
+    #pragma omp parallel for //openMP threading optimization
     for (int i = 0; i < z->rows * z->cols; i++) 
         out->data[i] = (z->data[i] > 0.0f) ? upstreamDelta->data[i] : 0.0f;
 }

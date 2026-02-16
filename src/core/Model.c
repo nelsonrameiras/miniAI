@@ -14,10 +14,19 @@ Model* modelCreate(Arena *arena, int *dims, int count) {
     for (int i = 0; i < m->count; i++) {
         m->layers[i].w = tensorAlloc(arena, dims[i+1], dims[i]);
         m->layers[i].b = tensorAlloc(arena, dims[i+1], 1);
-        if (!m->layers[i].w || !m->layers[i].b) return NULL;
+        m->layers[i].gradW = tensorAlloc(arena, dims[i+1], dims[i]);
+        m->layers[i].gradB = tensorAlloc(arena, dims[i+1], 1);
+        if (!m->layers[i].w || !m->layers[i].b) return NULL; 
+        if (!m->layers[i].gradW || !m->layers[i].gradB) return NULL;  
         
         tensorFillXavier(m->layers[i].w, dims[i]); 
-        for(int j=0; j < m->layers[i].b->rows; j++) m->layers[i].b->data[j] = 0.0f;
+
+        for(int j = 0; j < m->layers[i].b->rows; j++) {
+            m->layers[i].b->data[j] = 0.0f;
+            m->layers[i].gradB->data[j] = 0.0f; 
+        }
+        for(int j = 0; j < m->layers[i].gradW->rows * m->layers[i].gradW->cols; j++) 
+            m->layers[i].gradW->data[j] = 0.0f;
     }
     return m;
 }
@@ -50,6 +59,7 @@ int modelSave(Model *m, const char *filename) {
 int modelLoad(Model *m, const char *filename) {
     FILE *f = fopen(filename, "rb");
     if (!f) { fprintf(stderr, "Error: Could not open %s\n", filename); return -1; }
+    
     int count;
     if (fread(&count, sizeof(int), 1, f) != 1) { fprintf(stderr, "Error: Failed to read model count from %s\n", filename); fclose(f); return -1; }
     if (count != m->count) { fprintf(stderr, "Error: Model layer count mismatch (file: %d, expected: %d)\n", count, m->count); fclose(f); return -1; }

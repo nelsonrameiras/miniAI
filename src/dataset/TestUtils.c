@@ -16,30 +16,37 @@ void trainModel(Model *model, Dataset *ds, Arena *scratch) {
     float lr = g_trainConfig.learningRate;
     
     int *indices = (int*)malloc(ds->outputSize * sizeof(int));
-    if (!indices) {
-        fprintf(stderr, "Error: Could not allocate indices array\n");
-        return;
-    }
+    if (!indices) { fprintf(stderr, "Error: Could not allocate indices array\n"); return; }
     
-    for(int i = 0; i < ds->outputSize; i++) {
-        indices[i] = i;
-    }
+    for(int i = 0; i < ds->outputSize; i++) indices[i] = i;
 
     for (int pass = 0; pass < TOTAL_PASSES; pass++) {
         shuffle(indices, ds->outputSize);
+
+        int currentBatchSize = 0;
         
         for (int i = 0; i < ds->outputSize; i++) {
             arenaReset(scratch);
             int idx = indices[i];
             
             float *sample = datasetGetSample(ds, idx);
-            if (!sample) continue;
+
+            if (sample) {
+                // Instead of training right away, only accumulate the gradient
+                glueAccumulateGradients(model, sample, idx, TRAIN_NOISE, scratch);
+                currentBatchSize++;
+            }
             
-            glueTrainDigit(model, sample, idx, lr, TRAIN_NOISE, scratch);
+            if (currentBatchSize == BATCH_SIZE || i == ds->outputSize - 1) {
+                if (currentBatchSize > 0) {
+                    glueUpdateWeights(model, lr, currentBatchSize);
+                    currentBatchSize = 0;
+                }
+            }
         }
 
         // Learning rate decay and diagnostic logging
-        if (pass > 0 && pass % (DECAY_STEP / ds->outputSize) == 0) {
+        if (pass > 0 && pass % (DECAY_STEP ) == 0) {
             lr *= DECAY_RATE;
             
             // Compute diagnostic loss
@@ -235,11 +242,21 @@ BenchmarkResult runSingleExperiment(int hiddenSize, float lr, Dataset *ds,
         
         for (int pass = 0; pass < TOTAL_PASSES; pass++) {
             shuffle(indices, ds->outputSize);
+            int currentBatchSize = 0;
+
             for (int i = 0; i < ds->outputSize; i++) {
                 arenaReset(scratch);
                 float *sample = datasetGetSample(ds, indices[i]);
                 if (sample) {
-                    glueTrainDigit(model, sample, indices[i], learningRate, TRAIN_NOISE, scratch);
+                    glueAccumulateGradients(model, sample, indices[i], TRAIN_NOISE, scratch);
+                    currentBatchSize++;
+                }
+
+                if (currentBatchSize == BATCH_SIZE || i == ds->outputSize - 1) {
+                    if (currentBatchSize > 0) {
+                        glueUpdateWeights(model, learningRate, currentBatchSize);
+                        currentBatchSize = 0;
+                    }
                 }
             }
             if (pass > 0 && pass % (DECAY_STEP / ds->outputSize) == 0) {

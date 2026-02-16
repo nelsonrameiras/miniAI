@@ -2,21 +2,23 @@
 #define AI_HEADER_H
 
 // --- Network Architecture Defaults ---
-#define DEFAULT_HIDDEN  1024     // default hidden layer neurons
+#define DEFAULT_HIDDEN  512     // default hidden layer neurons
 
 // NUM_DIMS = number of dimension values (input, hidden, output)
 // Actual layer count = NUM_DIMS - 1 (2 layers for a 3-dim network)
 #define NUM_DIMS        3
 
 // --- Training Parameters ---
-#define DEFAULT_LR      0.005f
+#define DEFAULT_LR      0.02f
 #define LAMBDA          0.0001f  // L2 regularization factor
-#define GRAD_CLIP       1.0f     // Gradient clipping threshold
+#define GRAD_CLIP       5.0f     // Gradient clipping threshold
 
-#define TOTAL_PASSES    2000
-#define DECAY_STEP      5000
+#define TOTAL_PASSES    3000
+#define DECAY_STEP      500
 #define DECAY_RATE      0.7f
 #define TRAIN_NOISE     0.10f
+
+#define BATCH_SIZE      32      // mini-batch size
 
 // --- Testing Parameters ---
 #define STRESS_TRIALS   1000

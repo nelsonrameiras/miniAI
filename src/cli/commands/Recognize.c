@@ -56,8 +56,33 @@ int cmdRecognize(CommandArgs args) {
         return 1;
     }
     
-    printf("Segmented %d characters\n", ds->phrase.sequence->count);
     printf("Grid: %dx%d (%d inputs per character)\n\n", args.gridSize, args.gridSize, inputSize);
+
+    // Load config file if provided, or use default config for this model
+    if (args.configFile) {
+        extern void loadBestConfig(const char *configFile);
+        loadBestConfig(args.configFile);
+    } else {
+        // Auto-detect config file based on model name
+        const char *configFile = NULL;
+        if (strstr(args.modelFile, "alpha_brain_png")) {
+            configFile = "IO/configs/best_config_alpha_png.txt";
+        } else if (strstr(args.modelFile, "alpha_brain")) {
+            fprintf(stdout, "Can not use static model for PNG. Using alphaPNG.");
+            configFile = "IO/configs/best_config_alpha_png.txt";
+        } else if (strstr(args.modelFile, "digit_brain_png")) {
+            configFile = "IO/configs/best_config_digits_png.txt";
+        } else if (strstr(args.modelFile, "digit_brain")) {
+            fprintf(stdout, "Can not use static model for PNG. Using digitsPNG.");
+            configFile = "IO/configs/best_config_digits_png.txt";
+        }
+
+        if (configFile) {
+            extern void loadBestConfig(const char *configFile);
+            loadBestConfig(configFile);
+            printf("Auto-loaded config from: %s\n", configFile);
+        }
+    }
     
     // Create and load model
     int dims[] = {inputSize, g_trainConfig.hiddenSize, outputSize};
@@ -130,7 +155,7 @@ int cmdRecognize(CommandArgs args) {
     
     for (int i = 0; i < ds->phrase.sequence->count; i++) {
         if (ds->phrase.sequence->chars[i] == NULL) {
-            printf("%3d |       | (space)\n", i);
+            printf("%3d |      | (space)\n", i);
         } else {
             printf("%3d |  %c   |   %.2f%%\n", i, phrase[i == 0 ? 0 : i], confidences[i] * 100);
         }

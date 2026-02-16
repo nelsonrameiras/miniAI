@@ -7,6 +7,9 @@ typedef struct {
     Tensor *b; // Bias
     Tensor *z; // Pre-activation cache
     Tensor *a; // Post-activation cache
+    // Error accumulation
+    Tensor *gradW; // Accumulated weight gradients
+    Tensor *gradB; // Accumulated bias gradients
 } Layer;
 
 typedef struct {

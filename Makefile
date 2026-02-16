@@ -1,8 +1,9 @@
 # Compiler and Flags
 CC = gcc
-CFLAGS = -Wall -Wextra -O3 -I./headers -I./headers/core -I./headers/cli -I./headers/dataset \
+CFLAGS = -Wall -Wextra -I./headers -I./headers/core -I./headers/cli -I./headers/dataset \
 	-MMD -MP -I./headers/image -I./headers/utils -I./IO/external
-LIBS = -lm
+CFLAGS += -O3 -march=native -fopenmp
+LIBS = -lm -lgomp
 
 # Directories
 SRCDIR = src

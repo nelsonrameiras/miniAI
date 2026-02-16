@@ -19,9 +19,11 @@ void tensorDot(Tensor *out, Tensor *a, Tensor *b) {
     // validate dims: a->cols must equal b->rows for matrix multiplication
     if (a->cols != b->rows) { fprintf(stderr, "Error: tensorDot dimension mismatch: a(%d×%d) x b(%d×%d)\n", a->rows, a->cols, b->rows, b->cols); return; }
     
-    for (int i = 0; i < out->rows * out->cols; i++) out->data[i] = 0.0f;
-
+    #pragma omp parallel for schedule(static) // use openMP threading optimization
     for (int i = 0; i < a->rows; i++) {
+        // inits row 'i' with zeros only once
+        for (int j = 0; j < b->cols; j++) out->data[i * b->cols + j] = 0.0f;
+
         for (int k = 0; k < a->cols; k++) {
             float a_val = a->data[i * a->cols + k];
             for (int j = 0; j < b->cols; j++) 
