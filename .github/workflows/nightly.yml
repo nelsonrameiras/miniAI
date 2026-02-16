@@ -1,0 +1,177 @@
+name: Nightly Build
+
+on:
+  schedule:
+    # Run every night at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  # Nightly comprehensive build
+  nightly-build:
+    name: Nightly Build & Test
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        build_type: [Debug, Release]
+        include:
+          - os: ubuntu-latest
+            cc: gcc
+          - os: macos-latest
+            cc: clang
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Build (${{ matrix.build_type }})
+      run: |
+        make clean
+        if [ "${{ matrix.build_type }}" == "Debug" ]; then
+          make CC=${{ matrix.cc }} CFLAGS="-Wall -Wextra -g -O0 -DDEBUG"
+        else
+          make CC=${{ matrix.cc }} CFLAGS="-Wall -Wextra -O3 -DNDEBUG"
+        fi
+    
+    - name: Run comprehensive tests
+      run: |
+        # Train all model types
+        ./miniAI train --dataset digits --static
+        ./miniAI train --dataset alpha --static
+        
+        # Test all models
+        ./miniAI test --model IO/models/digit_brain.bin --dataset digits --static
+        ./miniAI test --model IO/models/alpha_brain.bin --dataset alpha --static
+        
+        # Run benchmarks
+        ./miniAI benchmark --dataset digits --static --reps 2
+        ./miniAI benchmark --dataset alpha --static --reps 2
+      timeout-minutes: 30
+      continue-on-error: true
+    
+    - name: Collect metrics
+      run: |
+        echo "=== Build Metrics ===" | tee metrics.log
+        echo "OS: ${{ matrix.os }}" | tee -a metrics.log
+        echo "Build Type: ${{ matrix.build_type }}" | tee -a metrics.log
+        echo "Binary Size: $(ls -lh miniAI | awk '{print $5}')" | tee -a metrics.log
+        echo "Models Created: $(ls -1 IO/models/*.bin 2>/dev/null | wc -l)" | tee -a metrics.log
+        echo "Configs Saved: $(ls -1 IO/configs/*.txt 2>/dev/null | wc -l)" | tee -a metrics.log
+    
+    - name: Upload nightly artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: nightly-${{ matrix.os }}-${{ matrix.build_type }}
+        path: |
+          miniAI
+          IO/models/*.bin
+          IO/configs/*.txt
+          metrics.log
+        retention-days: 7
+
+  # Memory leak check with Valgrind (Linux only)
+  memory-check:
+    name: Memory Leak Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Install Valgrind
+      run: sudo apt-get update && sudo apt-get install -y valgrind
+    
+    - name: Build with debug symbols
+      run: make clean && make CFLAGS="-Wall -Wextra -g -O0"
+    
+    - name: Run Valgrind
+      run: |
+        valgrind --leak-check=full \
+                 --show-leak-kinds=all \
+                 --track-origins=yes \
+                 --verbose \
+                 --log-file=valgrind.log \
+                 ./miniAI help
+      continue-on-error: true
+    
+    - name: Check for leaks
+      run: |
+        if grep -q "definitely lost: 0 bytes" valgrind.log; then
+          echo "✓ No memory leaks detected"
+        else
+          echo "⚠️ Potential memory leaks detected"
+          cat valgrind.log
+        fi
+      continue-on-error: true
+    
+    - name: Upload Valgrind report
+      uses: actions/upload-artifact@v4
+      with:
+        name: valgrind-report
+        path: valgrind.log
+        retention-days: 30
+
+  # Performance profiling
+  performance-profile:
+    name: Performance Profiling
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Install profiling tools
+      run: sudo apt-get update && sudo apt-get install -y linux-tools-generic perf
+      continue-on-error: true
+    
+    - name: Build with profiling
+      run: make clean && make CFLAGS="-Wall -Wextra -O2 -pg"
+    
+    - name: Run training with profiling
+      run: |
+        ./miniAI train --dataset digits --static
+        if [ -f gmon.out ]; then
+          gprof miniAI gmon.out > profile.txt
+          head -50 profile.txt
+        fi
+      continue-on-error: true
+    
+    - name: Upload profiling report
+      uses: actions/upload-artifact@v4
+      with:
+        name: performance-profile
+        path: |
+          profile.txt
+          gmon.out
+        retention-days: 30
+      if: always()
+
+  # Create nightly summary
+  nightly-summary:
+    name: Nightly Summary
+    runs-on: ubuntu-latest
+    needs: [nightly-build, memory-check, performance-profile]
+    if: always()
+    
+    steps:
+    - name: Generate summary
+      run: |
+        echo "# Nightly Build Report" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Date**: $(date -u)" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "## Build Status" >> $GITHUB_STEP_SUMMARY
+        echo "- **Nightly Build**: ${{ needs.nightly-build.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Memory Check**: ${{ needs.memory-check.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Performance Profile**: ${{ needs.performance-profile.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "## Artifacts" >> $GITHUB_STEP_SUMMARY
+        echo "Check the artifacts tab for detailed reports." >> $GITHUB_STEP_SUMMARY
+    
+    - name: Notify on failure
+      if: needs.nightly-build.result == 'failure'
+      run: |
+        echo "::error::Nightly build failed! Check the logs for details."

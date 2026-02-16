@@ -1,0 +1,297 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.0.0)'
+        required: true
+        default: 'v0.1.0'
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  # Build release binaries for multiple platforms
+  build-release:
+    name: Build Release (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+            cc: gcc
+            artifact: miniAI-linux-x64
+          - os: macos-latest
+            platform: macos
+            cc: clang
+            artifact: miniAI-macos-x64
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Get version
+      id: version
+      run: |
+        if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+          echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+        else
+          echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Setup build environment
+      run: |
+        if [ "$RUNNER_OS" == "Linux" ]; then
+          sudo apt-get update
+          sudo apt-get install -y build-essential zip
+        elif [ "$RUNNER_OS" == "macOS" ]; then
+          brew install gcc make zip
+        fi
+    
+    - name: Build optimized release
+      run: |
+        make clean
+        make CC=${{ matrix.cc }} CFLAGS="-Wall -Wextra -O3 -DNDEBUG"
+    
+    - name: Strip binary
+      run: |
+        if [ "$RUNNER_OS" == "Linux" ]; then
+          strip miniAI
+        fi
+    
+    - name: Create release package
+      run: |
+        mkdir -p release/miniAI
+        cp miniAI release/miniAI/
+        cp README.md LICENSE release/miniAI/
+        cp -r tools release/miniAI/
+        mkdir -p release/miniAI/IO/models
+        mkdir -p release/miniAI/IO/configs
+        mkdir -p release/miniAI/IO/images
+        
+        # Create quick start guide
+        cat > release/miniAI/QUICKSTART.md << 'EOF'
+        # miniAI - Quick Start
+        
+        ## Installation
+        
+        No installation required! Just run the executable.
+        
+        ## Basic Usage
+        
+        ```bash
+        # Show help
+        ./miniAI help
+        
+        # Train a model (static, fast)
+        ./miniAI train --dataset digits --static
+        
+        # Test the model
+        ./miniAI test --model IO/models/digit_brain.bin --dataset digits --static
+        
+        # Run benchmark
+        ./miniAI benchmark --dataset digits --static --reps 3
+        ```
+        
+        ## Full Documentation
+        
+        See README.md for complete documentation.
+        
+        ## Platform
+        
+        Built for: ${{ matrix.platform }}
+        Version: ${{ steps.version.outputs.version }}
+        EOF
+        
+        cd release
+        zip -r ${{ matrix.artifact }}.zip miniAI/
+        cd ..
+        
+        mv release/${{ matrix.artifact }}.zip .
+    
+    - name: Generate checksums
+      run: |
+        if [ "$RUNNER_OS" == "Linux" ]; then
+          sha256sum ${{ matrix.artifact }}.zip > ${{ matrix.artifact }}.zip.sha256
+        else
+          shasum -a 256 ${{ matrix.artifact }}.zip > ${{ matrix.artifact }}.zip.sha256
+        fi
+    
+    - name: Upload release artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.artifact }}
+        path: |
+          ${{ matrix.artifact }}.zip
+          ${{ matrix.artifact }}.zip.sha256
+        retention-days: 90
+
+  # Create GitHub Release
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: build-release
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Get version
+      id: version
+      run: |
+        if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+          echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+        else
+          echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+    
+    - name: Generate release notes
+      id: release_notes
+      run: |
+        cat > release_notes.md << 'EOF'
+        # miniAI ${{ steps.version.outputs.version }}
+        
+        ## What's New
+        
+        This release includes the latest improvements to miniAI.
+        
+        ## Features
+        
+        - Complete neural network implementation in pure C
+        - Digit recognition (5×5 static, 8×8 PNG)
+        - Alphanumeric recognition (8×8 static, 16×16 PNG)
+        - Phrase recognition with automatic segmentation
+        - Hyperparameter optimization via benchmarking
+        - Unified command-line interface
+        
+        ## Downloads
+        
+        Choose the binary for your platform:
+        
+        - **Linux (x64)**: `miniAI-linux-x64.zip`
+        - **macOS (x64)**: `miniAI-macos-x64.zip`
+        
+        Verify downloads with the `.sha256` checksum files.
+        
+        ## Installation
+        
+        ```bash
+        # Extract
+        unzip miniAI-linux-x64.zip
+        cd miniAI
+        
+        # Run
+        ./miniAI help
+        ```
+        
+        ## Quick Start
+        
+        ```bash
+        # Train a model
+        ./miniAI train --dataset digits --static
+        
+        # Test the model
+        ./miniAI test --model IO/models/digit_brain.bin --dataset digits --static
+        
+        # Run benchmark
+        ./miniAI benchmark --dataset digits --static --reps 3
+        ```
+        
+        ## Documentation
+        
+        See the included README.md for complete documentation.
+        
+        ## Changelog
+        
+        EOF
+        
+        # Add git log if available
+        if git describe --tags --abbrev=0 HEAD^ 2>/dev/null; then
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^)
+          echo "### Changes since $PREV_TAG" >> release_notes.md
+          echo '```' >> release_notes.md
+          git log --oneline ${PREV_TAG}..HEAD >> release_notes.md
+          echo '```' >> release_notes.md
+        fi
+        
+        cat release_notes.md
+    
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ steps.version.outputs.version }}
+        name: miniAI ${{ steps.version.outputs.version }}
+        body_path: release_notes.md
+        draft: false
+        prerelease: false
+        files: |
+          miniAI-linux-x64/miniAI-linux-x64.zip
+          miniAI-linux-x64/miniAI-linux-x64.zip.sha256
+          miniAI-macos-x64/miniAI-macos-x64.zip
+          miniAI-macos-x64/miniAI-macos-x64.zip.sha256
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Release summary
+      run: |
+        echo "# Release Created!" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Version**: ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "## Artifacts" >> $GITHUB_STEP_SUMMARY
+        echo "- Linux x64 binary" >> $GITHUB_STEP_SUMMARY
+        echo "- macOS x64 binary" >> $GITHUB_STEP_SUMMARY
+        echo "- SHA256 checksums" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "## Next Steps" >> $GITHUB_STEP_SUMMARY
+        echo "1. Test the release binaries" >> $GITHUB_STEP_SUMMARY
+        echo "2. Update documentation if needed" >> $GITHUB_STEP_SUMMARY
+        echo "3. Announce the release" >> $GITHUB_STEP_SUMMARY
+
+  # Optional: Docker image build
+  docker-build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: build-release
+    if: github.event_name == 'push'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Get version
+      id: version
+      run: echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: |
+          ghcr.io/${{ github.repository }}:${{ steps.version.outputs.version }}
+          ghcr.io/${{ github.repository }}:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+      continue-on-error: true

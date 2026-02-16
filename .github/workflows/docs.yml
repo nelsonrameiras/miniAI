@@ -1,0 +1,225 @@
+name: Deploy Documentation
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'README.md'
+      - 'docs/**'
+      - '.github/workflows/docs.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  # Build documentation
+  build:
+    name: Build Documentation
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
+    
+    - name: Create docs structure
+      run: |
+        mkdir -p docs/_site
+        
+        # Copy README as index
+        cp README.md docs/_site/index.md
+        
+        # Create additional documentation pages
+        cat > docs/_site/quickstart.md << 'EOF'
+        # Quick Start Guide
+        
+        ## Installation
+        
+        Download the latest release for your platform:
+        - [Linux x64](https://github.com/nelsonramosua/miniAI/releases/latest)
+        - [macOS x64](https://github.com/nelsonramosua/miniAI/releases/latest)
+        
+        ## First Steps
+        
+        ```bash
+        # Extract the archive
+        unzip miniAI-linux-x64.zip
+        cd miniAI
+        
+        # Train your first model
+        ./miniAI train --dataset digits --static
+        
+        # Test the model
+        ./miniAI test --model IO/models/digit_brain.bin --dataset digits --static
+        ```
+        
+        ## What's Next?
+        
+        - Check out the [full documentation](index.md)
+        - Try different datasets (alpha, custom)
+        - Run benchmarks to optimize hyperparameters
+        - Experiment with phrase recognition
+        EOF
+        
+        cat > docs/_site/api.md << 'EOF'
+        # API Reference
+        
+        ## Commands
+        
+        ### train
+        Train a new neural network model.
+        
+        ```bash
+        ./miniAI train --dataset <type> [--static|--data [path]]
+        ```
+        
+        ### test
+        Test a trained model on a dataset or image.
+        
+        ```bash
+        ./miniAI test --model <path> --dataset <type> [--static|--data]
+        ./miniAI test --model <path> --image <path>
+        ```
+        
+        ### benchmark
+        Run hyperparameter grid search.
+        
+        ```bash
+        ./miniAI benchmark --dataset <type> [--static|--data] [--reps <n>]
+        ```
+        
+        ### recognize
+        Recognize text in an image.
+        
+        ```bash
+        ./miniAI recognize --model <path> --image <path>
+        ```
+        
+        ## Options
+        
+        - `--dataset <type>` - Dataset type: digits, alpha
+        - `--data [path]` - Use PNG dataset (optional path)
+        - `--static` - Use static in-memory dataset
+        - `--model <path>` - Path to model file
+        - `--image <path>` - Path to image file
+        - `--grid <size>` - Grid size (5, 8, or 16)
+        - `--reps <n>` - Number of benchmark repetitions
+        EOF
+        
+        cat > docs/_site/architecture.md << 'EOF'
+        # Architecture
+        
+        ## System Overview
+        
+        miniAI is organized into several key components:
+        
+        ### Core Neural Network
+        - **Arena**: Custom memory allocator
+        - **Tensor**: Matrix operations
+        - **Model**: Network structure
+        - **Grad**: Backpropagation
+        - **Glue**: High-level training API
+        
+        ### CLI Layer
+        - **ArgParse**: Command-line parsing
+        - **Commands**: Command dispatcher
+        - **Command implementations**: Train, Test, Benchmark, Recognize
+        
+        ### Dataset Management
+        - **Dataset**: Unified dataset abstraction
+        - **TestUtils**: Testing and evaluation
+        
+        ### Image Processing
+        - **ImageLoader**: PNG loading via stb_image
+        - **ImagePreprocess**: Grayscale, binarization, resizing
+        - **Segmenter**: Character segmentation for phrases
+        
+        ## Data Flow
+        
+        1. **Training**: Dataset → Model → Trained weights
+        2. **Testing**: Input → Model → Predictions
+        3. **Recognition**: Image → Preprocessing → Segmentation → Model → Text
+        EOF
+        
+        # Create navigation
+        cat > docs/_site/_config.yml << 'EOF'
+        title: miniAI Documentation
+        description: Educational neural network in pure C
+        theme: jekyll-theme-minimal
+        
+        navigation:
+          - title: Home
+            url: /
+          - title: Quick Start
+            url: /quickstart
+          - title: API Reference
+            url: /api
+          - title: Architecture
+            url: /architecture
+        EOF
+    
+    - name: Generate project structure
+      run: |
+        cat > docs/_site/structure.md << 'EOF'
+        # Project Structure
+        
+        ```
+        miniAI/
+        ├── headers/           # Organized headers
+        │   ├── cli/          # CLI interface
+        │   ├── core/         # Neural network core
+        │   ├── dataset/      # Dataset management
+        │   ├── image/        # Image processing
+        │   └── utils/        # Utilities
+        ├── src/              # Implementations
+        │   ├── cli/
+        │   │   └── commands/
+        │   ├── core/
+        │   ├── dataset/
+        │   └── image/
+        ├── IO/               # Data and models
+        │   ├── images/       # PNG datasets
+        │   ├── models/       # Trained models
+        │   └── configs/      # Hyperparameter configs
+        └── tools/            # Python utilities
+        ```
+        EOF
+    
+    - name: Build with Jekyll
+      uses: actions/jekyll-build-pages@v1
+      with:
+        source: ./docs/_site
+        destination: ./_site
+    
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+
+  # Deploy to GitHub Pages
+  deploy:
+    name: Deploy to GitHub Pages
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    
+    steps:
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
+    
+    - name: Deployment summary
+      run: |
+        echo "# Documentation Deployed!" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "Documentation is now available at:" >> $GITHUB_STEP_SUMMARY
+        echo "${{ steps.deployment.outputs.page_url }}" >> $GITHUB_STEP_SUMMARY
