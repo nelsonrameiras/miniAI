@@ -70,7 +70,7 @@ jobs:
             make CC=${{ matrix.cc }} CFLAGS="-Wall -Wextra -O3 -DNDEBUG -Xpreprocessor -fopenmp $CPPFLAGS" LIBS="-lm -lomp $LDFLAGS"
           fi
         fi
-            env:
+      env:
         CC: ${{ matrix.cc }}
         LDFLAGS: ${{ env.LDFLAGS }}
         CPPFLAGS: ${{ env.CPPFLAGS }}
