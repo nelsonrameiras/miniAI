@@ -1,9 +1,23 @@
 # Compiler and Flags
+# Detect OS if not set
+OS ?= $(shell uname -s)
+
 CC = gcc
 CFLAGS = -Wall -Wextra -I./headers -I./headers/core -I./headers/cli -I./headers/dataset \
 	-MMD -MP -I./headers/image -I./headers/utils -I./IO/external
-CFLAGS += -O3 -march=native -fopenmp
-LIBS = -lm -lgomp
+CFLAGS += -O3 -march=native 
+LIBS = -lm 
+
+ifeq ($(OS),Darwin)
+    OPENMP_CFLAGS = -Xpreprocessor -fopenmp
+    OPENMP_LDFLAGS = -lomp
+else
+    OPENMP_CFLAGS = -fopenmp
+    OPENMP_LDFLAGS = -lgomp
+endif
+
+CFLAGS += $(OPENMP_CFLAGS)
+LIBS += $(OPENMP_LDFLAGS)
 
 # Directories
 SRCDIR = src
