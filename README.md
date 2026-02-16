@@ -10,27 +10,47 @@
 ### Neural Network Architecture
 - **Multi-Layer Feed-Forward Network**: Flexible architecture with configurable number of hidden layers.
 - **Activation Functions**: ReLU for hidden layers, Softmax for output layer.
-- **Complete Backpropagation**: Backpropagation implementation with ReLU derivatives.
+- **Complete Backpropagation**: Full backpropagation implementation with ReLU derivatives.
 - **L2 Regularization**: Overfitting prevention through weight penalization.
 - **Gradient Clipping**: Protection against exploding gradients.
 - **Xavier/He Initialization**: Smart weight initialization for faster convergence.
 
 ### Recognition Capabilities
-1. **Digit Recognition (0-9)**
-   - 5×5 pixel grid (25 input features).
-   - 10 output classes.
-   - Training with data augmentation (salt & pepper noise).
 
-2. **Alphanumeric Recognition (0-9, A-Z, a-z)**
-   - 8×8 pixel grid (64 input features).
-   - 62 output classes.
-   - Support for uppercase and lowercase.
+#### 1. Digit Recognition (0-9)
+**Static Dataset:**
+- 5×5 pixel grid (25 input features).
+- 10 output classes.
+- Fast in-memory training.
 
-3. **Phrase Recognition**
-   - Automatic character segmentation.
-   - Word space detection.
-   - PNG image processing.
-   - Full phrase support.
+**PNG Dataset:**
+- 8×8 pixel grid (64 input features).
+- 10 output classes.
+- Realistic image testing.
+
+#### 2. Alphanumeric Recognition (0-9, A-Z, a-z)
+**Static Dataset:**
+- 8×8 pixel grid (64 input features).
+- 62 output classes.
+- Fast training with hardcoded data.
+
+**PNG Dataset:**
+- 16×16 pixel grid (256 input features).
+- 62 output classes.
+- High-resolution character recognition.
+
+#### 3. Phrase Recognition
+- Automatic character segmentation.
+- Word space detection.
+- PNG image processing.
+- Full phrase support with alphanumeric characters.
+
+### Unified Command-Line Interface
+- **Single executable** (`miniAI`) with multiple commands.
+- **train** - Train models with automatic hyperparameter optimization.
+- **test** - Test models on datasets or individual images.
+- **benchmark** - Run hyperparameter grid search.
+- **recognize** - Recognize phrases in images.
 
 ### Memory Management
 - **Arena Allocator**: Efficient and deterministic memory allocation system.
@@ -39,7 +59,7 @@
 
 ### Image Processing
 - **PNG Loading**: Native PNG image support via stb_image.
-- **Preprocessing**: Grayscale conversion, resizing and binarization.
+- **Preprocessing**: Grayscale conversion, resizing, and binarization.
 - **Otsu Threshold**: Automatic adaptive binarization.
 - **Character Segmentation**: Detection and extraction of individual characters in phrases.
 
@@ -53,44 +73,76 @@
 
 ```
 miniAI/
-├── headers/                    # Main module headers
-│   ├── Arena.h                # Memory management (arena allocator)
-│   ├── Tensor.h               # Matrix operations and activations
-│   ├── Model.h                # Neural model structure
-│   ├── Grad.h                 # Gradients and derivatives
-│   ├── Glue.h                 # Training and inference API
-│   ├── Utils.h                # Utility functions
-│   ├── ImageLoader.h          # PNG image loading
-│   ├── ImagePreprocess.h      # Image preprocessing
-│   └── Segmenter.h            # Character segmentation in phrases
+├── headers/                   # Organized headers by category
+│   ├── cli/                   # Command-line interface
+│   │   ├── ArgParse.h         # Argument parsing
+│   │   └── Commands.h         # Command execution
+│   ├── core/                  # Core neural network
+│   │   ├── Arena.h            # Memory management (arena allocator)
+│   │   ├── Tensor.h           # Matrix operations and activations
+│   │   ├── Model.h            # Neural model structure
+│   │   ├── Grad.h             # Gradients and derivatives
+│   │   └── Glue.h             # Training and inference API
+│   ├── dataset/               # Dataset management
+│   │   ├── Dataset.h          # Unified dataset abstraction
+│   │   └── TestUtils.h        # Testing utilities
+│   ├── image/                 # Image processing
+│   │   ├── ImageLoader.h      # PNG image loading
+│   │   ├── ImagePreprocess.h  # Image preprocessing
+│   │   └── Segmenter.h        # Character segmentation
+│   └── utils/                 # Utilities
+│       └── Utils.h            # Helper functions
 │
-├── src/                       # Implementations
-│   ├── Arena.c                # Arena allocator implementation
-│   ├── Tensor.c               # Tensor operations
-│   ├── Model.c                # Model creation, save/load
-│   ├── Grad.c                 # Gradient calculation
-│   ├── Glue.c                 # Forward/backward pass
-│   ├── Utils.c                # Utility functions
-│   └── tests/                 # Test drivers
-│       ├── testDriverSimple.c # Basic digit training
-│       ├── testDriver.c       # Complete demo with benchmarking
-│       ├── testDriverImage.c  # PNG image recognition
-│       └── testDriverPhrase.c # Phrase recognition
+├── src/                       # Implementations (mirrors headers/)
+│   ├── cli/                   # CLI implementation
+│   │   ├── ArgParse.c         # Argument parsing
+│   │   ├── Commands.c         # Command dispatcher
+│   │   └── commands/          # Command implementations
+│   │       ├── Train.c        # Training command
+│   │       ├── Test.c         # Testing command
+│   │       ├── Benchmark.c    # Benchmarking command
+│   │       └── Recognize.c    # Phrase recognition command
+│   ├── core/                  # Core implementations
+│   │   ├── Arena.c            # Arena allocator
+│   │   ├── Tensor.c           # Tensor operations
+│   │   ├── Model.c            # Model save/load
+│   │   ├── Grad.c             # Gradient calculation
+│   │   └── Glue.c             # Forward/backward pass
+│   ├── dataset/               # Dataset implementations
+│   │   ├── Dataset.c          # Dataset abstraction
+│   │   └── TestUtils.c        # Testing utilities
+│   ├── image/                 # Image processing implementations
+│   │   ├── ImageLoader.c      # PNG loader
+│   │   ├── ImagePreprocess.c  # Preprocessing
+│   │   └── Segmenter.c        # Character segmentation
+│   └── Utils.c                # Utility functions
 │
 ├── IO/                        # Input/Output and data
-│   ├── ImageLoader.c          # PNG loader implementation
-│   ├── ImagePreprocess.c      # Image preprocessing
-│   ├── Segmenter.c            # Character segmentation
-│   ├── alphabet.h             # 62-character dataset (8×8)
-│   ├── pngDigits/             # PNG digit images (0-9)
-│   ├── pngAlphaChars/         # Alphanumeric PNG images
-│   ├── testPhrases/           # Phrase images for testing
-│   ├── models/                # Saved trained models (.bin)
-│   ├── confs/                 # Optimized configurations
+│   ├── MemoryDatasets.c       # Static in-memory datasets
+│   ├── MemoryDatasets.h       # Dataset declarations
+│   ├── images/                # PNG datasets
+│   │   ├── digitsPNG/         # Digit images (8×8)
+│   │   ├── alphanumericPNG/   # Alphanumeric images (16×16)
+│   │   └── testPhrases/       # Test phrase images
+│   ├── models/                # Trained models (.bin)
+│   │   ├── digit_brain.bin         # Static digits (5×5)
+│   │   ├── digit_brain_png.bin     # PNG digits (8×8)
+│   │   ├── alpha_brain.bin         # Static alpha (8×8)
+│   │   └── alpha_brain_png.bin     # PNG alpha (16×16)
+│   ├── configs/               # Hyperparameter configs
+│   │   ├── best_config_digits_static.txt
+│   │   ├── best_config_digits_png.txt
+│   │   ├── best_config_alpha_static.txt
+│   │   └── best_config_alpha_png.txt
 │   └── external/              # External libraries
 │       └── stb_image.h        # Header-only PNG loader
 │
+├── tools/                     # Development tools
+│   ├── generateChars.py       # Generate character PNGs
+│   └── generatePhrases.py     # Generate phrase PNGs
+│
 ├── AIHeader.h                 # Main unified header
+├── miniAI.c                   # Main entry point
 ├── Makefile                   # Build system
 └── README.md                  # This file
 ```
@@ -98,124 +150,224 @@ miniAI/
 ## Compilation
 
 ### Prerequisites
-- C Compiler (GCC recommended, but you can change in Makefile).
+- C Compiler (GCC recommended, but you can change that in Makefile).
 - Make.
 - POSIX system (Linux, macOS, WSL).
 - Standard math library (`libm`).
-- Python3 for the PNG generation PY scripts.
+- Python 3 (for PNG generation scripts).
 
 ### Build
 
 ```bash
-# Compile all executables
+# Build miniAI executable
 make
 
-# Compile and run main demo
-make run
-
-# Run specific tests
-make run-simple         # Basic digit test
-make run-image          # PNG image test
-make run-phrase         # Phrase recognition help
-
-# Clean compiled files
+# Clean build files
 make clean
 
-# Clean trained models only
+# Clean models only
 make clean-models
+
+# Clean configs only
+make clean-configs
+
+# Clean everything
+make clean-all
 
 # Complete rebuild
 make rebuild
 
-# View complete help
+# View help
 make help
 ```
 
-### Generated Executables
+### Quick Start Examples
 
-1. **`testDriverSimple`** - Basic digit training.
-2. **`testDriver`** - Complete demo with benchmarking.
-3. **`testDriverPNG`** - Individual PNG image recognition.
-4. **`testDriverPhrase`** - Image phrase recognition (uses model generated by `testDriverPNG`).
+```bash
+# Train with static dataset (fast, 5×5)
+make train-digits
+
+# Train with PNG dataset (more realistic, 8×8)
+make train-png-digits
+
+# Test static model
+make test-static
+
+# Test PNG model
+make test-png
+
+# Run benchmark
+make benchmark
+```
+
+## Static vs PNG Datasets
+
+miniAI currently supports two types of datasets, for flexibility and performance:
+
+### Static Datasets (In-Memory)
+- **Digits**: 5×5 grid (25 inputs), hardcoded perfect samples.
+- **Alpha**: 8×8 grid (64 inputs), hardcoded perfect samples.
+- **Advantages**: Very fast training, no I/O overhead.
+- **Use case**: Quick experiments, hyperparameter tuning.
+- **Models**: `digit_brain.bin`, `alpha_brain.bin`.
+
+### PNG Datasets (Realistic)
+- **Digits**: 8×8 grid (64 inputs), PNG images.
+- **Alpha**: 16×16 grid (256 inputs), high-res PNG images.
+- **Advantages**: Realistic testing, external image support.
+- **Use case**: Production models, phrase recognition.
+- **Models**: `digit_brain_png.bin`, `alpha_brain_png.bin`.
+
+### Important Notes
+
+**Models are NOT interchangeable!** A model trained on static data cannot be used with PNG data (and vice-versa) due to different input dimensions!
+
+**Correct usage:**
+```bash
+# Train static -> Test static
+./miniAI train --dataset digits --static
+./miniAI test [--model IO/models/digit_brain.bin] --dataset digits --static
+# model can be inferred by dataset type.
+
+# Train PNG → Test PNG
+./miniAI train --dataset digits --data
+./miniAI test --dataset digits --data
+```
+
+**Incorrect usage (dimension mismatch):**
+```bash
+# Don't mix static model with PNG dataset!
+./miniAI test --model IO/models/digit_brain.bin --dataset digits --data
+# Error: Layer 0 dimension mismatch! File: 1024x25, Expected: 1024x64
+```
 
 ## Usage
 
-### 1. Basic Digit Training
+### 1. Training Models
 
-This was the first «iteration» of the project (testDriverSimple): smaller input layer, smaller no. classes, etc.
-
+#### Static Dataset (Faster)
 ```bash
-# Train digit model from scratch
-./testDriverSimple
+# Train digits (5×5, fast)
+./miniAI train --dataset digits [--static]
+# --static flag is by default in the operations it is defined. It is not mandatory passing it.
 
-# Load pre-trained model
-./testDriverSimple run
-
-# Run hyperparameter benchmark
-./testDriverSimple bench
+# Train static alphanumeric (8×8, fast)
+./miniAI train [--dataset alpha]
+# alphanumeric dataset is default, not mandatory passing it.
+# so, ./miniAI train --dataset alpha --static 
+# =   ./miniAI train
 ```
 
-**Expected output:**
-```
---- TRAINING PHASE ---
-Pass 0 | Loss: 2.302585 | LR: 0.005000
-Pass 500 | Loss: 0.123456 | LR: 0.003500
-Pass 1000 | Loss: 0.045678 | LR: 0.002450
-Pass 1500 | Loss: 0.012345 | LR: 0.001715
+#### PNG Dataset (Realistic)
+```bash
+# Train digits (8×8, more realistic)
+./miniAI train --dataset digits --data
 
---- TEST 1: PERFECT DIGITS ---
-Real: 0 | AI: 0 (Confidence: 99.87%)
-Real: 1 | AI: 1 (Confidence: 99.92%)
+# Train alphanumeric (16×16, more realistic)
+./miniAI train --data
+
+# Use custom PNG directory
+./miniAI train --dataset digits --data /path/to/custom/digit/pngs
+# so, if no path is provided to --data flag, it uses the default PNGs, at IO/images/.
+```
+
+**Example Output:**
+```
+=== TRAINING MODE ===
+
+Dataset: PNG from IO/images/alphanumericPNG
+Grid: 16x16 (256 inputs)
+Classes: 62
+
+Loaded 62/62 PNG samples
+Loaded config: Hidden=128, LR=0.020
+Model: 256 -> 128 -> 62
+
+--- TRAINING PHASE (ALPHANUMERIC) ---
+Pass 500 | Loss: 0.129139 | LR: 0.014000
+Pass 1000 | Loss: 0.018894 | LR: 0.009800
+Pass 1500 | Loss: 0.067296 | LR: 0.006860
+Pass 2000 | Loss: 0.007140 | LR: 0.004802
+
+Model saved to IO/models/alpha_brain_png.bin
+Config saved: Hidden=128, LR=0.020
+
+--- TEST 1: PERFECT SAMPLES ---
 ...
-Perfect Digit Accuracy: 10/10
+Accuracy: 62/62 (100.00%)
 
---- TEST 2: STRESS TEST (SALT & PEPPER NOISE) ---
-Robustness Score (2-pixel noise): 98.50%
+--- TEST 2: STRESS TEST (SALT & PEPPER) ---
+...
+Robustness Score (2-pixel noise): 100.00%
 ```
 
-### 2. PNG Image Recognition
+### 2. Testing Models
 
+#### Test on Dataset
 ```bash
-# Test with specific image
-make test-png PNG=IO/pngAlphaChars/065_A.png
+# Test static model on static dataset
+./miniAI test --dataset digits --static
 
-# Or directly
-./testDriverPNG IO/pngAlphaChars/065_A.png
+# Test PNG model on PNG dataset
+./miniAI test  --dataset digits --data
+
+# Use custom dataset (no guarantee recognition will be good...)
+./miniAI test --dataset digits --data /custom/path
 ```
 
-**Output:**
+#### Test on Single Image
+```bash
+# Test with single image (PNG mode automatic!):
+./miniAI test --dataset digits --image test.png
+
+# The system automatically:
+# 1. Uses PNG mode when --image is provided.
+# 2. Loads correct config (hidden size, learning rate).
+# 3. Shows top-5 predictions with confidence.
 ```
---- PNG CHARACTER RECOGNITION ---
-Loading image: IO/pngAlphaChars/065_A.png
-Image size: 32x32 pixels, 1 channels
-Preprocessing to 8x8 grid...
 
-********
-*     *
-*     *
-*******
-*     *
-*     *
+**Example Output:**
+```
+=== TESTING MODE ===
 
-AI Prediction: 'A' (Confidence: 99.23%)
+Testing single image: test.png
+
+Loaded config: Hidden=128, LR=0.020
+Model: 256 -> 128 -> 62
+Loading model from IO/models/alpha_brain_png.bin
+
+Prediction: 'A' (Confidence: 99.23%)
+
+Top 5 predictions:
+  1. 'A' - 99.23%
+  2. 'R' - 0.45%
+  3. 'H' - 0.18%
+  4. 'N' - 0.09%
+  5. 'M' - 0.03%
 ```
 
 ### 3. Phrase Recognition
 
 ```bash
-# Recognize phrase in image (alphanumeric mode - default)
-make phrase IMG=IO/testPhrases/hello_world.png
+# Recognize alphanumeric phrase (default)
+./miniAI recognize --image phrase.png
 
 # Recognize digits only
-make phrase IMG=IO/testPhrases/numbers.png MODE=digits
-
-# With custom model (most call binary directly):
-# make sure the custom model is compatible...
-./testDriverPhrase phrase.png --model custom_model.bin
+./miniAI recognize --model IO/models/digit_brain_png.bin [or: --dataset digits] --image numbers.png
+# passing either model or dataset will infer that digits are being worked on.
 ```
 
-**Output:**
+**Example Output:**
 ```
+=== PHRASE RECOGNITION MODE ===
+
+Loading and segmenting phrase from: phrase.png
+Segmented 10 characters
+Grid: 16x16 (256 inputs per character)
+
+Loaded config: Hidden=128, LR=0.020
+Model: 256 -> 128 -> 62
+
 ========================================
          RECOGNIZED PHRASE
 ========================================
@@ -240,26 +392,143 @@ Pos | Char | Confidence
 
 ### 4. Hyperparameter Benchmarking
 
-The system includes a benchmarking tool that automatically tests different configurations to find the best hyperparameters (att: the only testDriver that doesn't have benchmarking is the one that tests phrase recognition, as that will use the model trained by testDriverImage / PNG; the other testDrivers all create different models (either in no. classes or in input size (and are saved with appropriate names))):
+The system includes automatic grid search for optimal hyperparameters (benchmarking):
 
 ```bash
-./testDriver bench
+# Benchmark static dataset
+./miniAI benchmark --dataset digits --static --reps 3
+
+# Benchmark PNG dataset
+./miniAI benchmark --dataset digits --data --reps 5
 ```
 
-**Output:**
+**Example Output:**
 ```
+=== BENCHMARK MODE ===
+
+Dataset: PNG from IO/images/digitsPNG
+Grid: 8x8 (64 inputs)
+Classes: 10
+Repetitions: 3
+
 --- SCIENTIFIC AI BENCHMARK (N=3) ---
 Hidden |  LR   |  Avg Score  |  Std Dev  | Status
 -------|-------|-------------|-----------|--------
   16   | 0.001 |   85.23%    |   2.45    |
-  16   | 0.005 |   92.67%    |   1.89    | <-- STABLE
-  16   | 0.008 |   94.12%    |   3.21    | <-- UNSTABLE
-  ...
- 128   | 0.005 |   98.45%    |   1.23    | <-- STABLE
-  ...
+  16   | 0.005 |   92.67%    |   1.89    | STABLE
+  16   | 0.008 |   94.12%    |   3.21    | UNSTABLE
+  32   | 0.005 |   95.34%    |   1.67    | STABLE
+  64   | 0.005 |   97.12%    |   1.34    | STABLE
+ 128   | 0.005 |   98.45%    |   1.23    | STABLE
+ 256   | 0.008 |   98.23%    |   2.89    | UNSTABLE
+ 512   | 0.005 |   98.67%    |   1.45    | STABLE
 
-WINNER: Hidden=128, LR=0.005 (Avg: 98.45%).
-Optimized parameters saved in 'best_config.txt'.
+WINNER: Hidden=512, LR=0.005 (Avg: 98.67%)
+Config saved to IO/configs/best_config_digits_png.txt
+
+Benchmark complete!
+```
+**Note**: simplified output. It tests every hidden size in {16, 32, 64, 128, 256, 512, 1024} for every learning rate in {0.001f, 0.005f, 0.008f, 0.01f, 0.015f, 0.02f}.
+
+### 5. Complete Workflow Examples
+
+#### Static Workflow (Fast Development)
+```bash
+# 1. Train
+./miniAI train --dataset digits --static
+
+# 2. Test
+./miniAI test --dataset digits --static
+
+# 3. Benchmark
+./miniAI benchmark --dataset digits --static --reps 3
+
+# 4. Test again with best hyperparameters
+./miniAI test --dataset digits --static
+```
+
+#### PNG Workflow (More Realistic Testing)
+```bash
+# 1. Train
+./miniAI train --dataset digits --data
+
+# 2. Test on dataset
+./miniAI test --dataset digits --data
+
+# 3. Test on images
+./miniAI test --image test1.png
+./miniAI test --image test2.png
+
+# 4. Benchmark
+./miniAI benchmark --dataset digits --data --reps 5
+
+# 5. Test again (on dataset or on images)
+```
+
+#### Phrase Recognition Workflow
+```bash
+# 1. Train PNG alpha model (or digit, if you want)
+./miniAI train --dataset alpha --data
+
+# 2. Recognize phrases
+./miniAI recognize --image phrase1.png
+./miniAI recognize --image phrase2.png
+```
+
+## Command Reference
+
+### Global Options
+```
+--dataset <type>    Dataset type: digits, alpha (default: alpha)
+--data [path]       Use PNG dataset (optional path, defaults to IO/images/)
+--static            Use static in-memory dataset
+--model <path>      Path to model file (optional, can be inferred)
+--image <path>      Path to image file
+--grid <size>       Grid size: 5, 8, or 16 (default: auto)
+--reps <n>          Benchmark repetitions (default: 3)
+--load              Load existing model instead of training
+--verbose           Verbose output
+```
+
+### Commands
+
+#### train
+Train a new model or continue training existing one.
+
+```bash
+./miniAI train --dataset <digits|alpha> [--static|--data [path]] [--load]
+```
+
+#### test
+Test model on dataset or single image.
+
+```bash
+# Test on dataset
+./miniAI test [--model <path>] --dataset <type> [--static|--data [path]]
+
+# Test on image (PNG mode automatic)
+./miniAI test [--model <path>] --image <path>
+```
+
+#### benchmark
+Run hyperparameter grid search.
+
+```bash
+./miniAI benchmark --dataset <type> [--static|--data [path]] [--reps <n>]
+```
+
+#### recognize
+Recognize phrase in image.
+
+```bash
+./miniAI recognize [--dataset <type>] --image <path>
+```
+
+#### help
+Show help message.
+
+```bash
+./miniAI help
 ```
 
 ## Technical Architecture
@@ -268,9 +537,9 @@ Optimized parameters saved in 'best_config.txt'.
 
 ```c
 typedef struct {
-    int rows;        // Number of rows.
-    int cols;        // Number of columns.
-    float *data;     // Data in row-major! format.
+    int rows;        // Number of rows
+    int cols;        // Number of columns
+    float *data;     // Data in row-major! format
 } Tensor;
 ```
 
@@ -278,10 +547,12 @@ typedef struct {
 
 ```c
 typedef struct {
-    Tensor *w;       // Weights.
-    Tensor *b;       // Bias.
-    Tensor *z;       // Pre-activation (cache).
-    Tensor *a;       // Post-activation (cache).
+    Tensor *w;       // Weights
+    Tensor *b;       // Bias
+    Tensor *z;       // Pre-activation (cache)
+    Tensor *a;       // Post-activation (cache)
+    Tensor *gradW;   // Accumulated weight gradients
+    Tensor *gradB;   // Accumulated bias gradients
 } Layer;
 ```
 
@@ -289,8 +560,8 @@ typedef struct {
 
 ```c
 typedef struct {
-    Layer *layers;   // Array of layers.
-    int count;       // Number of layers.
+    Layer *layers;   // Array of layers
+    int count;       // Number of layers
 } Model;
 ```
 
@@ -300,10 +571,10 @@ For each layer `i`:
 1. **Linear**: `z[i] = W[i] * a[i-1] + b[i]`
 2. **Activation**: 
    - Hidden layers: `a[i] = ReLU(z[i])`
-   - Output layer: `a[i] = Softmax(z[i])`
+   - Output layer: Raw z[i] passed directly to the objective function (Softmax is applied during loss calculation).
 
 ```c
-// Simplified example. Go to the actual function for further detail.
+// Simplified forward pass
 Tensor* glueForward(Model *m, Tensor *input, Arena *scratch) {
     Tensor *currentInput = input;
     for (int i = 0; i < m->count; i++) {
@@ -313,9 +584,9 @@ Tensor* glueForward(Model *m, Tensor *input, Arena *scratch) {
         
         // Apply activation
         if (i < m->count - 1) {
-            tensorReLU(m->layers[i].a, m->layers[i].z);  // Hidden layers
+            tensorReLU(m->layers[i].a, m->layers[i].z);  // Hidden
         } else {
-            // Output layer (softmax applied externally)
+            // Output (softmax applied externally)
             for(int j = 0; j < m->layers[i].z->rows; j++) 
                 m->layers[i].a->data[j] = m->layers[i].z->data[j];
         }
@@ -338,7 +609,7 @@ The implemented backpropagation algorithm includes:
    ```
    delta_output = p - target
    ```
-   where `target` is one-hot encoded!
+   where `target` is one-hot encoded
 
 3. **Weight Update** with L2 regularization:
    ```
@@ -371,20 +642,6 @@ float relu_derivative(float x) {
 }
 ```
 
-#### Sigmoid
-(Currently, sigmoid is not being used, but is left in ```Tensor.c``` and ```Grad.c``` for potential future use.)
-```c
-float sigmoid(float x) {
-    return 1.0f / (1.0f + expf(-x));
-}
-
-// Derivative
-float sigmoid_derivative(float x) {
-    float s = sigmoid(x);
-    return s * (1.0f - s);
-}
-```
-
 #### Softmax
 ```c
 void tensorSoftmax(Tensor *out, Tensor *in) {
@@ -409,25 +666,24 @@ void tensorSoftmax(Tensor *out, Tensor *in) {
 
 ### Main Parameters (AIHeader.h)
 
-The parameters can be tuned here.
-
 ```c
 // Network Architecture
-#define DEFAULT_HIDDEN  1024     // Hidden layer neurons
+#define DEFAULT_HIDDEN  512      // Hidden layer neurons
 #define NUM_DIMS        3        // Number of dimensions [input, hidden, output]
 
 // Training Parameters
-#define DEFAULT_LR      0.005f   // Initial learning rate
+#define DEFAULT_LR      0.02f    // Initial learning rate
 #define LAMBDA          0.0001f  // L2 regularization factor
-#define GRAD_CLIP       1.0f     // Gradient clipping threshold
+#define GRAD_CLIP       5.0f     // Gradient clipping threshold
 #define TRAIN_NOISE     0.10f    // Pixel flip probability
 
 // Training Configuration
-#define TOTAL_PASSES    2000     // Number of epochs
-#define DECAY_STEP      5000     // Steps for LR decay
+#define TOTAL_PASSES    3000     // Number of epochs
+#define DECAY_STEP      500      // Steps for LR decay
 #define DECAY_RATE      0.7f     // LR decay factor
+#define BATCH_SIZE      32       // mini-batch size
 
-// Tests
+// Testing
 #define STRESS_TRIALS   1000     // Robustness tests
 #define STRESS_NOISE    2        // Noisy pixels
 #define CONFUSION_TESTS 500      // Confusion matrix tests
@@ -435,7 +691,7 @@ The parameters can be tuned here.
 
 ### Dynamic Configuration
 
-The system supports **runtime configuration** through `TrainingConfig`:
+The system supports **runtime configuration** overrides (via benchmarking) through TrainingConfig, passed by config files:
 
 ```c
 typedef struct {
@@ -443,20 +699,26 @@ typedef struct {
     float learningRate;     // Learning rate.
     int   benchmarkReps;    // Benchmark repetitions.
 } TrainingConfig;
-
-// Usage:
-TrainingConfig config = {
-    .hiddenSize = 512,
-    .learningRate = 0.008f,
-    .benchmarkReps = 5
-};
 ```
+
+**Config File Format** (`IO/configs/best_config_*.txt`):
+```
+128
+0.020000
+```
+Line 1: Hidden size  
+Line 2: Learning rate
+
+The system automatically:
+1. Saves best config after benchmarking
+2. Loads config before testing/recognition, etc.
+3. Ensures model dimensions match config
 
 ## Implementation Details
 
 ### Arena Allocator
 
-The system uses a custom arena allocator for efficient memory management. It's a simple version, but, for the purposes of this project, well enough. Could be extended in the future.
+The system uses a custom arena allocator for efficient memory management (`src/core/Arena.c`). It is designed for maximum performance through linear allocations and complete resets between inference/training steps.
 
 ```c
 typedef struct {
@@ -471,7 +733,7 @@ Arena *arena = arenaInit(8 * MB);
 // Allocation (no individual free)
 float *data = (float*)arenaAlloc(arena, sizeof(float) * size);
 
-// Reset (frees everything at once)
+// Reset (resets allocation pointer to 0, "freeing" everything instantly)
 arenaReset(arena);
 
 // Destruction
@@ -486,7 +748,7 @@ arenaFree(arena);
 
 ### Model Serialization
 
-Models can be saved and loaded in binary format (```Model.c```):
+Models can be saved and loaded in binary format:
 
 ```c
 // Save model
@@ -497,27 +759,27 @@ Model *model = modelCreate(arena, dims, NUM_DIMS);
 modelLoad(model, "IO/models/digit_brain.bin");
 ```
 
-**Binary file format:**
+**Binary File Format:**
 ```
-[int32] count            - Number of layers.
-[int32] rows[0]          - Layer 0 dimensions.
+[int32] count            - Number of layers
+[int32] rows[0]          - Layer 0 dimensions
 [int32] cols[0]
 ...
-[int32] rows[n-1]        - Layer n-1 dimensions.
+[int32] rows[n-1]        - Layer n-1 dimensions
 [int32] cols[n-1]
-[float32[]] weights[0]   - Layer 0 weights.
-[float32[]] bias[0]      - Layer 0 bias.
+[float32[]] weights[0]   - Layer 0 weights
+[float32[]] bias[0]      - Layer 0 bias
 ...
-[float32[]] weights[n-1] - Layer n-1 weights.
-[float32[]] bias[n-1]    - Layer n-1 bias.
+[float32[]] weights[n-1] - Layer n-1 weights
+[float32[]] bias[n-1]    - Layer n-1 bias
 ```
 
 ### Image Processing
 
 #### Preprocessing Pipeline
 
-1. **Loading**: PNG -> RawImage (thank you, stb_image).
-2. **Conversion**: RGB -> Grayscale (luminance).
+1. **Loading**: PNG → RawImage (via stb_image, see Acknowledgments).
+2. **Conversion**: RGB → Grayscale (luminance).
 3. **Binarization**: Automatic Otsu threshold.
 4. **Resizing**: Resize to target grid.
 5. **Normalization**: [0, 255] → [0.0, 1.0].
@@ -540,7 +802,7 @@ float *processed = imagePreprocess(rawImage, cfg);
 
 #### Phrase Segmentation
 
-The system includes automatic character segmentation in phrases:
+Automatic character segmentation algorithm:
 
 ```c
 typedef struct {
@@ -550,7 +812,7 @@ typedef struct {
     int charSize;       // Size of each character.
 } CharSequence;
 
-SegmenterConfig cfg = defaultSegmenterConfig(8);
+SegmenterConfig cfg = defaultSegmenterConfig(16);
 CharSequence *seq = segmentPhrase(image, cfg);
 ```
 
@@ -558,115 +820,97 @@ CharSequence *seq = segmentPhrase(image, cfg);
 1. Binarize image.
 2. Horizontal projection to detect text line.
 3. Vertical projection to detect character columns.
-4. Bounding box extraction (with Otsu threshold).
+4. Bounding box extraction with Otsu threshold.
 5. Resizing to uniform grid.
 6. Space detection (gaps larger than threshold).
 
-## Educational Concepts
+### Multi-threading (OpenMP)
 
-Why I actually created this project.
-
-### Feed-Forward Neural Networks
-
-A feed-forward network consists of:
-- **Input layer**: Receives features (image pixels).
-- **Hidden layers**: Intermediate processing.
-- **Output layer**: Produces class probabilities.
-
-### Gradient Descent
-
-Training uses Stochastic Gradient Descent (SGD) with:
-- **Shuffle**: Random order of examples in each epoch.
-- **Mini-batch**: One example at a time (online learning).
-- **Learning rate decay**: Gradual LR reduction for fine convergence.
-
-### Regularization
-
-Techniques to prevent overfitting:
-
-1. **L2 Regularization (Weight Decay)**
-   ```
-   Loss_total = Loss_CE + lambda * ||W||²
-   ```
-   Penalizes large weights, favoring simpler models.
-
-2. **Gradient Clipping**
-   ```
-   if |grad(W)| > threshold:
-       grad(W) ← threshold * sign(grad(W))
-   ```
-   This prevents gradient explosion.
-
-3. **Data Augmentation**
-   - Random pixel flipping (salt & pepper noise).
-   - Increases model robustness.
-
-### Xavier/He Initialization
-
-Smart initialization based on layer size (see [Xavier/He Initialization](http://proceedings.mlr.press/v9/glorot10a.html)):
+To ensure this pure-C implementation runs fast on the CPU, heavily nested loops (like matrix dot products and derivative mapping) are parallelized with OpenMP pragmas.
 
 ```c
-void tensorFillXavier(Tensor *t, int inSize) {
-    float scale = sqrtf(2.0f / (float)inSize);
-    for (int i = 0; i < t->rows * t->cols; i++)
-        t->data[i] = (((float)rand() / (float)RAND_MAX) * 2.0f - 1.0f) * scale;
+#pragma omp parallel for schedule(static)
+for (int i = 0; i < a->rows; i++) {
+    // Math operations distributed across CPU cores...
 }
 ```
-
-Maintains constant activation variance across layers, facilitating training.
-
-## Performance and Results
-
-### Typical Metrics
-
-For digit recognition (5×5, 10 classes):
-- **Perfect Accuracy**: 100% (clean digits).
-- **Noisy Accuracy**: 97-99% (2 pixels with noise).
-- **Training Time**: ~2-5 seconds (2000 epochs).
-- **Model Size**: approx. 100KB.
-
-For alphanumeric recognition (8×8, 62 classes):
-- **Perfect Accuracy**: 98-100% (clean characters).
-- **Phrase Recognition**: 95-98% (real phrases, **generated with IO/generatePhrases.py**).
-- **Training Time**: ~10-30 seconds (5000 epochs).
-- **Model Size**: approx. 500KB.
-
-### Hyperparameter Optimization
-
-Typical benchmark results are, for example:
-
-| Hidden Size | Learning Rate | Accuracy | Std Dev | Status |
-|-------------|--------------|----------|---------|--------|
-| 64          | 0.005        | 94.2%    | 2.1     |        |
-| 128         | 0.005        | 97.8%    | 1.3     | Stable |
-| 256         | 0.008        | 98.5%    | 2.9     | Unstable |
-| 512         | 0.005        | 98.9%    | 1.1     | **Best** |
-| 1024        | 0.005        | 98.7%    | 1.4     | Stable |
 
 ## Debugging and Troubleshooting
 
 ### Common Issues
 
-I ran into some of these in development, so I will leave some caveats here:
+#### 1. Dimension Mismatch Error
 
-#### 1. Low Accuracy
-- **Cause**: Inadequate learning rate.
-- **Solution**: Run `./testDriver bench` to find optimal LR (it will be auto applied (saved into IO/configs/best_config_*.txt and read in training (if it exists))).
+```
+Error: Layer 0 dimension mismatch! File: 128x64, Expected: 512x64
+```
+
+**Causes:**
+- Using static model with PNG dataset (or vice-versa).
+- Model trained with different hidden size than current config.
+
+**Solutions:**
+```bash
+# Make sure model type matches dataset type
+# Static model -> Static dataset
+./miniAI test --model IO/models/digit_brain.bin --dataset digits --static
+
+# PNG model -> PNG dataset
+./miniAI test --model IO/models/digit_brain_png.bin --dataset digits --data
+
+# Or retrain with current config
+./miniAI train --dataset digits --data
+```
 
 #### 2. Model Load Fails
-```
-Error: Layer 0 dimension mismatch! File: 128x25, Expected: 256x25
-```
-- **Cause**: Model saved with different configuration (different layer sizes, or you're trying to use the simpler digits model with alphanumeric testing (or vice-versa)).
-- **Solution**: Delete `IO/models/*.bin` or adjust `DEFAULT_HIDDEN` according to what you're testing.
 
-#### 3. Segmentation Fault
-- **Cause**: Most likely, arena too small.
-- **Solution**: Increase capacity in `arenaInit()` on your testDriver arena initialization.
+```
+Error: Could not open IO/models/alpha_brain_png.bin
+```
 
-#### 4. NaN in Loss
-- **Cause**: Exploding gradients.
-- **Solution**: Either reduce learning rate or increase `GRAD_CLIP`. See what makes more sense in your case.
+**Causes:**
+- Model file doesn't exist.
+- Wrong path (missing `IO/` prefix or something of the kind).
+
+**Solutions:**
+```bash
+# Check model exists
+ls -la IO/models/
+
+# Train model if missing
+./miniAI train --dataset alpha --data
+
+# Use correct path, if passing it
+./miniAI test --model IO/models/alpha_brain_png.bin --image test.png
+```
+
+#### 3. Low Accuracy
+
+**Cause**: Suboptimal hyperparameters.
+
+**Solution**: Run benchmark to find optimal configuration.
+```bash
+./miniAI benchmark --dataset digits --data --reps 5
+# Uses found config automatically in subsequent training/testing
+```
+
+#### 4. Segmentation Fault
+
+**Cause**: Arena too small for large models.
+
+**Solution**: Increase arena capacity in source code.
+```c
+// In command file (e.g., Train.c)
+Arena *perm = arenaInit(32 * MB);  // Increase from 16 MB
+```
+
+#### 5. NaN in Loss
+
+**Cause**: Exploding gradients.
+
+**Solution**: 
+- Reduce learning rate, or,
+- Increase `GRAD_CLIP` in `AIHeader.h`.
 
 ### Advanced Debugging
 
@@ -686,11 +930,62 @@ void debugForward(Model *m, Tensor *input) {
 }
 ```
 
+## Educational Concepts
+
+### Feed-Forward Neural Networks
+
+A feed-forward network consists of:
+- **Input layer**: Receives features (image pixels).
+- **Hidden layers**: Intermediate processing.
+- **Output layer**: Produces class probabilities.
+
+### Gradient Descent
+
+Training uses Stochastic Gradient Descent (SGD) with:
+- **Shuffle**: Random order of examples in each epoch.
+- **Mini-batch**: One example at a time (kind-of online learning).
+- **Learning rate decay**: Gradual LR reduction for fine convergence.
+
+### Regularization
+
+Techniques to prevent overfitting:
+
+1. **L2 Regularization (Weight Decay)**
+   ```
+   Loss_total = Loss_CE + lambda * ||W||²
+   ```
+   Penalizes large weights, favoring simpler models
+
+2. **Gradient Clipping**
+   ```
+   if |grad(W)| > threshold:
+       grad(W) ← threshold * sign(grad(W))
+   ```
+   Prevents gradient explosion
+
+3. **Data Augmentation**
+   - Random pixel flipping (salt & pepper noise)
+   - Increases model robustness
+
+### Xavier/He Initialization
+
+Smart initialization based on layer size:
+
+```c
+void tensorFillXavier(Tensor *t, int inSize) {
+    float scale = sqrtf(2.0f / (float)inSize);
+    for (int i = 0; i < t->rows * t->cols; i++)
+        t->data[i] = (((float)rand() / (float)RAND_MAX) * 2.0f - 1.0f) * scale;
+}
+```
+
+Maintains constant activation variance across layers, facilitating training.
+
 ## Possible Extensions
 
 ### Future Features
 
-Some features I would like to add in the future, to further extend the capabilities of this «mini AI»:
+**Please, contribute**.
 
 1. **Advanced Architectures**
    - Convolutional Neural Networks (CNN).
@@ -708,7 +1003,8 @@ Some features I would like to add in the future, to further extend the capabilit
    - Translation.
    - Elastic deformation.
 
-4. **Visualization**
+4. **Visualization** \
+For those of you who are Python masters, which I'm definitely not.
    - Loss curve plotting.
    - Filter visualization.
    - Feature t-SNE.
@@ -725,10 +1021,10 @@ To add new features:
 1. Maintain zero-dependency philosophy.
 2. Use arena allocator for allocations.
 3. Document functions with comments.
-4. Add tests in `src/tests/`.
+4. Add tests in appropriate command (or create a new one, if that is the case (also add usage in help, in that case)).
 5. Update this README.
 
-- see contribution pipeline with more detail below.
+See Contributing section below for detailed guidelines.
 
 ## References and Resources
 
@@ -761,6 +1057,7 @@ To add new features:
 2. **Arena Allocator**: Trade-off between flexibility and performance.
 3. **Row-Major**: Matrices in row-major for cache locality.
 4. **Hardcoded Activations**: ReLU/Softmax hardcoded for simplicity.
+5. **Unified CLI**: Single executable with multiple commands for ease of use.
 
 ## Contributing
 
@@ -775,9 +1072,11 @@ Contributions are welcome! Please:
 ### Guidelines
 
 - Keep code clean and well documented.
-- Follow existing code style (**important**).
+- Follow existing code style (important!).
 - Add tests for new features.
 - Update documentation.
+- Maintain zero-dependency philosophy.
+- Use arena allocator for memory management.
 
 ## License
 
