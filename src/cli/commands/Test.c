@@ -68,6 +68,14 @@ static int testSingleImage(CommandArgs args) {
     }
     
     int inputSize = args.gridSize * args.gridSize;
+
+    // Load best configuration if available (for correct hidden size)
+    char configFile[256];
+    const char *datasetName = args.dataset == DATASET_SPEC_DIGITS ? "digits" : "alpha";
+    const char *datasetType = args.useStatic ? "static" : "png";
+    snprintf(configFile, sizeof(configFile), "IO/configs/best_config_%s_%s.txt",
+             datasetName, datasetType);
+    loadBestConfig(configFile);
     
     // Create model
     int dims[] = {inputSize, g_trainConfig.hiddenSize, outputSize};
@@ -221,6 +229,14 @@ static int testDataset(CommandArgs args) {
         arenaFree(scratch);
         return 1;
     }
+
+    // Load best configuration if available (for correct hidden size)
+    char configFile[256];
+    const char *datasetName = args.dataset == DATASET_SPEC_DIGITS ? "digits" : "alpha";
+    const char *datasetType = args.useStatic ? "static" : "png";
+    snprintf(configFile, sizeof(configFile), "IO/configs/best_config_%s_%s.txt",
+             datasetName, datasetType);
+    loadBestConfig(configFile);
     
     // Create model
     int dims[] = {ds->inputSize, g_trainConfig.hiddenSize, ds->outputSize};
