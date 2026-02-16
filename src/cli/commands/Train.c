@@ -1,7 +1,7 @@
-#include "../../headers/cli/Commands.h"
-#include "../../headers/dataset/Dataset.h"
-#include "../../headers/dataset/TestUtils.h"
-#include "../../headers/core/Model.h"
+#include "../../../headers/cli/Commands.h"
+#include "../../../headers/dataset/Dataset.h"
+#include "../../../headers/dataset/TestUtils.h"
+#include "../../../headers/core/Model.h"
 #include "../../AIHeader.h"
 #include "../../IO/MemoryDatasets.h"
 #include <stdio.h>

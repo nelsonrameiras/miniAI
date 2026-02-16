@@ -1,5 +1,5 @@
-#include "../headers/cli/Commands.h"
-#include "../headers/cli/ArgParse.h"
+#include "../../headers/cli/Commands.h"
+#include "../../headers/cli/ArgParse.h"
 #include <stdio.h>
 
 int executeCommand(CommandArgs args) {
