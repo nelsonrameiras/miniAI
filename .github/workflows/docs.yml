@@ -34,7 +34,7 @@ jobs:
     - name: Setup Pages
       uses: actions/configure-pages@v5
     
-    - name: Create docs structure
+    - name: Assemble site
       run: |
         mkdir -p _site_build/_layouts
         mkdir -p _site_build/assets/css
@@ -51,9 +51,6 @@ jobs:
 
         cp -fr "$DOCS_DIR/diagrams/." _site_build/docs/diagrams/
 
-        echo -e "---\nlayout: default\ntitle: README\npermalink: /readme.html\n---\n" > _site_build/readme.md
-        sed 's|\.github/workflows/docs/diagrams|docs/diagrams|g' README.md >> _site_build/readme.md
-
         # Pages from docs/
         cp -f "$DOCS_DIR/index.md"        _site_build/index.md
         cp -f "$DOCS_DIR/quickstart.md"   _site_build/quickstart.md
@@ -61,16 +58,12 @@ jobs:
         cp -f "$DOCS_DIR/architecture.md" _site_build/architecture.md
         cp -f "$DOCS_DIR/diagrams.md"     _site_build/diagrams.md
 
-        # 4. Generate README page (accessible as readme.html)
         echo -e "---\nlayout: default\ntitle: README\npermalink: /readme.html\n---\n" > _site_build/readme.md
-        cat README.md >> _site_build/readme.md
+        sed 's|\.github/workflows/docs/diagrams|docs/diagrams|g' README.md >> _site_build/readme.md
 
         # 5. Generate CONTRIBUTING page if it exists
         if [ -f CONTRIBUTING.md ]; then
-          echo "---" > _site_build/contributing.md
-          echo "layout: default" >> _site_build/contributing.md
-          echo "permalink: /contributing.html" >> _site_build/contributing.md
-          echo "---" >> _site_build/contributing.md
+          echo -e "---\nlayout: default\ntitle: Contributing\npermalink: /contributing.html\n---\n" > _site_build/contributing.md
           cat CONTRIBUTING.md >> _site_build/contributing.md
         fi
 
