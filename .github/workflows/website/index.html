@@ -55,15 +55,41 @@
 
     <script type="module">
         import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
-        mermaid.initialize({ 
-            startOnLoad: true,
-            theme: 'default',
-            flowchart: {
-                useMaxWidth: true,
-                htmlLabels: true
-            }
+        
+        // Convert Jekyll's <code class="language-mermaid"> to <div class="mermaid">
+        document.addEventListener('DOMContentLoaded', function() {
+            // Find all code blocks with language-mermaid
+            const mermaidCodeBlocks = document.querySelectorAll('code.language-mermaid');
+            
+            mermaidCodeBlocks.forEach(function(codeBlock) {
+                // Get the mermaid source code
+                const mermaidSource = codeBlock.textContent;
+                
+                // Create a new div with class mermaid
+                const mermaidDiv = document.createElement('div');
+                mermaidDiv.className = 'mermaid';
+                mermaidDiv.textContent = mermaidSource;
+                
+                // Replace the <pre><code> with the <div>
+                const preElement = codeBlock.parentElement;
+                preElement.parentElement.replaceChild(mermaidDiv, preElement);
+            });
+            
+            // Now initialize Mermaid to render the converted divs
+            mermaid.initialize({ 
+                startOnLoad: true,
+                theme: 'default',
+                securityLevel: 'loose',
+                flowchart: {
+                    useMaxWidth: true,
+                    htmlLabels: true,
+                    curve: 'basis'
+                }
+            });
+            
+            // Trigger rendering
+            mermaid.run();
         });
     </script>
 </body>
-
 </html>
