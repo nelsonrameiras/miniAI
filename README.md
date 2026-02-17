@@ -640,6 +640,7 @@ Tensor* glueForward(Model *m, Tensor *input, Arena *scratch) {
 }
 ```
 #### Forward Propagation Dataflow
+
 <p align="center">
     <b>Forward Pass</b><br>
     <img src=".github/workflows/docs/diagrams/forwardPass.png" alt="Forward Pass">
