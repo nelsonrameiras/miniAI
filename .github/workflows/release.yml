@@ -68,11 +68,6 @@ jobs:
       run: |
         echo "LDFLAGS=-L/opt/homebrew/opt/libomp/lib" >> $GITHUB_ENV
         echo "CPPFLAGS=-I/opt/homebrew/opt/libomp/include" >> $GITHUB_ENV
-    
-    - name: Build optimized release
-      run: |
-        make clean
-        make CC=${{ matrix.cc }} CFLAGS="-Wall -Wextra -O3 -DNDEBUG"
 
     - name: Build optimized release
       run: |
@@ -287,41 +282,57 @@ jobs:
         echo "2. Update documentation if needed" >> $GITHUB_STEP_SUMMARY
         echo "3. Announce the release" >> $GITHUB_STEP_SUMMARY
 
-  # Optional: Docker image build
-  docker-build:
-    name: Build Docker Image
+  # Docker: build and push to Docker Hub + GHCR
+  docker-publish:
+    name: Publish Docker Image
     runs-on: ubuntu-latest
     needs: build-release
-    if: always() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && needs.build-release.result == 'success'
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-    
+
     - name: Get version
       id: version
-      run: echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-    
+      run: |
+        if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+          echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+        else
+          echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        fi
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
-    
+
+    # Login to Docker Hub
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    # Login to GitHub Container Registry
     - name: Login to GitHub Container Registry
       uses: docker/login-action@v3
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-    
+
+    # Generate image metadata (tags + labels)
     - name: Extract Docker metadata
       id: meta
       uses: docker/metadata-action@v5
       with:
-        images: ghcr.io/${{ github.repository }}
+        images: |
+          ${{ secrets.DOCKERHUB_USERNAME }}/miniai
+          ghcr.io/${{ github.repository }}
         tags: |
-          type=ref,event=branch
           type=semver,pattern={{version}}
-          type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+          type=semver,pattern={{major}}.{{minor}}
+          type=raw,value=latest
 
+    # Build and push to both registries in one step
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
       with:
@@ -331,3 +342,28 @@ jobs:
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
+
+    - name: Docker publish summary
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+        DOCKERHUB_USER="${{ secrets.DOCKERHUB_USERNAME }}"
+        
+        echo "# Docker Image Published!" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "## Published to Docker Hub" >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+        echo "docker pull ${DOCKERHUB_USER}/miniai:${VERSION}" >> $GITHUB_STEP_SUMMARY
+        echo "docker pull ${DOCKERHUB_USER}/miniai:latest" >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "## Published to GitHub Container Registry" >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+        echo "docker pull ghcr.io/${{ github.repository }}:${VERSION}" >> $GITHUB_STEP_SUMMARY
+        echo "docker pull ghcr.io/${{ github.repository }}:latest" >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "## Run miniAI with Docker" >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+        echo "docker run --rm ${DOCKERHUB_USER}/miniai help" >> $GITHUB_STEP_SUMMARY
+        echo "docker run --rm ${DOCKERHUB_USER}/miniai train --dataset digits --static" >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY

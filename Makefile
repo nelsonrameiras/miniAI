@@ -106,6 +106,13 @@ $(TARGET): $(OBJ_ALL)
 run: $(TARGET)
 	@./$(TARGET) help
 
+train: $(TARGET)
+	@echo "Usage examples:"
+	@echo "  make train-static    		- Train static alpha model on static alpha dataset"
+	@echo "  make train-static-digits   - Train static digits model on static digits dataset"
+	@echo "  make train-png       		- Train PNG alpha model on PNG alpha dataset"
+	@echo "  make train-png-digits     	- Train PNG digits model on PNG digits dataset"
+
 train-static: $(TARGET)
 	@./$(TARGET) train --dataset alpha --static
 
@@ -120,9 +127,12 @@ train-png-digits: $(TARGET)
 
 test: $(TARGET)
 	@echo "Usage examples:"
-	@echo "  make test-static    - Test static aloha model on static alpha dataset"
-	@echo "  make test-png       - Test PNG alpha model on PNG alpha dataset"
-	@echo "  make test-image IMG=test.png [MODEL=IO/models/digit_brain_png.bin]"
+	@echo "  make test-static    		- Test static alpha model on static alpha dataset"
+	@echo "  make test-static-digits    - Test static alpha model on static alpha dataset"
+	@echo "  make test-png       		- Test PNG alpha model on PNG alpha dataset"
+	@echo "  make test-png-digits       - Test PNG alpha model on PNG alpha dataset"
+	@echo "  make test-image IMG=test.png      	  - test image with PNG alpha model"
+	@echo "  make test-image-digits IMG=test.png  - test image with PNG digits model"
 
 test-static: $(TARGET)
 	@./$(TARGET) test --static
@@ -149,6 +159,14 @@ test-image-digits: $(TARGET)
 	else \
 		./$(TARGET) test --image $(IMG) --dataset digits; \
 	fi
+
+benchmark: $(TARGET)
+	@echo "Usage examples:"
+	@echo "  make benchmark-static    		- Benchmark static alpha model on static alpha dataset"
+	@echo "  make benchmark-static-digits   - Benchmark static digits model on static digits dataset"
+	@echo "  make benchmark-png       		- Benchmark PNG alpha model on PNG alpha dataset"
+	@echo "  make benchmark-png-digits     	- Benchmark PNG digits model on PNG digits dataset"
+	@echo "  make benchmark-png REPS=5     	- Benchmark with N=5 repetitions"
 
 benchmark-static: $(TARGET)
 	@./$(TARGET) benchmark --static --reps $(or $(REPS),3)

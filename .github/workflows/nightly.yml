@@ -88,7 +88,7 @@ jobs:
         # Run benchmarks
         ./miniAI benchmark --dataset digits --static --reps 2
         ./miniAI benchmark --dataset alpha --static --reps 2
-      timeout-minutes: 60
+      timeout-minutes: 180
       continue-on-error: true
     
     - name: Collect metrics

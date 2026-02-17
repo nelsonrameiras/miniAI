@@ -79,12 +79,12 @@ git checkout -b feature/your-feature-name
 ```
 
 **Branch naming conventions:**
-- `feature/` - New features
-- `fix/` - Bug fixes
-- `docs/` - Documentation updates
-- `refactor/` - Code refactoring
-- `test/` - Test additions/improvements
-- `perf/` - Performance improvements
+- `feature/` - New features.
+- `fix/` - Bug fixes.
+- `docs/` - Documentation updates.
+- `refactor/` - Code refactoring.
+- `test/` - Test additions/improvements.
+- `perf/` - Performance improvements.
 
 ### 2. Make Changes
 

@@ -118,7 +118,6 @@ jobs:
         EOF
         
         cat > _site_build/api.md << 'EOF'
-
         ---
         layout: default
         title: API Reference
@@ -170,7 +169,6 @@ jobs:
         EOF
 
         cat > _site_build/architecture.md << 'EOF'
-
         ---
         layout: default
         title: Architecture
