@@ -100,7 +100,7 @@ jobs:
       
         # Bundle QUICKSTART from docs/ — same source as the website
         # Inject platform + version into a copy (strip Jekyll front matter first)
-        sed '/^---$/,/^---$/d' docs/quickstart.md > release/miniAI/QUICKSTART.md
+        sed '/^---$/,/^---$/d' .github/workflows/docs/quickstart.md > release/miniAI/QUICKSTART.md
         echo "" >> release/miniAI/QUICKSTART.md
         echo "---" >> release/miniAI/QUICKSTART.md
         echo "Platform: ${{ matrix.platform }} | Version: ${{ steps.version.outputs.version }}" >> release/miniAI/QUICKSTART.md
@@ -159,7 +159,7 @@ jobs:
         echo "" >> release_notes.md
 
         # Static body from template file
-        cat .github/docs/release-notes-template.md >> release_notes.md
+        cat .github/workflows/docs/release-notes-template.md >> release_notes.md
 
         # Dynamic changelog appended at the end
         if git describe --tags --abbrev=0 HEAD^ 2>/dev/null; then
