@@ -40,16 +40,21 @@
         </div>
 
         <!-- Main Content -->
+         ---
+        layout: default
+        ---
         <div class="content">
-            {% if content %}
-                {{ content }}
-            {% else %}
+            {% if page.url == "/index.html" or page.url == "/" %}
                 <h1>Welcome to miniAI</h1>
                 <p>Select a section from the sidebar to explore the documentation.</p>
-                <br><br>
-                <p>miniAI is a Feed-forward neural network in pure C without ML libraries.</p>
-                <p>Features backpropagation, custom memory management, PNG image processing, and automated hyperparameter optimization.</p>
-                <p>Also, a robust CI/CD system.</p>
+                <br>
+                <div class="hero-text">
+                    <p><strong>miniAI</strong> is a Feed-forward neural network in pure C without ML libraries.</p>
+                    <p>Features backpropagation, custom memory management, PNG image processing, and automated hyperparameter optimization.</p>
+                    <p>Also, a robust CI/CD system.</p>
+                </div>
+            {% else %}
+                {{ content }}
             {% endif %}
 
             <div class="footer" style="margin-top: 50px; border-top: 1px solid #eee; padding-top: 20px;">

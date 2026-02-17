@@ -47,7 +47,8 @@ jobs:
         cp -f "$WEBSITE_DIR/index.css" _site_build/assets/css/style.css
 
         # 3. Copy the original index to the root (main static page)
-        cp -f "$WEBSITE_DIR/index.html" _site_build/index.html
+        echo -e "---\nlayout: default\n---\n" > _site_build/index.html
+        cat $WEBSITE_DIR/index.html >> _site_build/index.html
 
         # 4. Generate README page (accessible as readme.html)
         echo -e "---\nlayout: default\ntitle: README\npermalink: /readme.html\n---\n" > _site_build/readme.md
