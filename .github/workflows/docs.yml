@@ -44,7 +44,7 @@ jobs:
 
         # 1. 2. Set index as template for Markdown pages & Copy CSS
         cp -f "$WEBSITE_DIR/index.html" _site_build/_layouts/default.html
-        cp -f "$WEBSITE_DIR/style.css" _site_build/assets/css/
+        cp -f "$WEBSITE_DIR/index.css" _site_build/assets/css/style.css
 
         # 3. Copy the original index to the root (main static page)
         cp -f "$WEBSITE_DIR/index.html" _site_build/index.html
