@@ -9,6 +9,7 @@ on:
       - 'docs/**'
       - '.github/workflows/website/**'
       - '.github/workflows/docs/**'
+      - '.github/workflows/docs/diagrams/**'
       - '.github/workflows/docs.yml'
   workflow_dispatch:
 
