@@ -118,6 +118,25 @@ body {
     font-size: 0.9em;
 }
 
+.content img {
+    max-width: 100%;      /* Nunca maior que o container */
+    height: auto;         /* Mantém proporções */
+    display: block;
+    margin: 20px auto;    /* Centradas com espaçamento */
+}
+
+.content .mermaid {
+    text-align: center;
+    margin: 30px 0;
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.content .mermaid svg {
+    max-width: 100%;
+    height: auto;
+}
+
 /* Tabelas */
 .content table {
     width: 100%;
