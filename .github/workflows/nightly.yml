@@ -104,7 +104,7 @@ jobs:
         echo "Configs Saved: $(ls -1 IO/configs/*.txt 2>/dev/null | wc -l)" | tee -a metrics.log
     
     - name: Upload nightly artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: nightly-${{ matrix.os }}-${{ matrix.build_type }}
         path: |
@@ -150,7 +150,7 @@ jobs:
       continue-on-error: true
     
     - name: Upload Valgrind report
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: valgrind-report
         path: valgrind.log
@@ -182,7 +182,7 @@ jobs:
       continue-on-error: true
     
     - name: Upload profiling report
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: performance-profile
         path: |
