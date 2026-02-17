@@ -97,28 +97,35 @@ body {
     color: #34495e;
 }
 
-.content code {
-    background: #f4f4f4;
-    padding: 2px 6px;
-    border-radius: 3px;
-    font-family: "Courier New", monospace;
-    font-size: 14px;
-}
-
+/* Blocos de Código (Onde o código se vê mal) */
 .content pre {
-    background: #2c3e50;
-    color: #ecf0f1;
+    background: #1e1e1e !important; /* Fundo cinza muito escuro */
+    color: #dcdcdc !important;    /* Texto cinza claro/branco */
     padding: 20px;
-    border-radius: 6px;
+    border-radius: 8px;
     overflow-x: auto;
-    margin: 15px 0;
+    border: 1px solid #333;
+    font-family: 'Consolas', 'Monaco', monospace;
+    line-height: 1.45;
 }
 
-.content pre code {
-    background: none;
-    color: inherit;
-    padding: 0;
+/* Código inline (ex: `comando`) */
+.content code {
+    background: #f0f0f0;
+    color: #d63384; /* Cor de destaque rosa/bordô */
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.9em;
 }
+
+/* Tabelas */
+.content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 25px 0;
+}
+.content th { background: #f8f9fa; border: 1px solid #dee2e6; padding: 12px; }
+.content td { border: 1px solid #dee2e6; padding: 12px; }
 
 .content a {
     color: #3498db;
@@ -133,18 +140,6 @@ body {
     width: 100%;
     border-collapse: collapse;
     margin: 20px 0;
-}
-
-.content th,
-.content td {
-    padding: 12px;
-    border: 1px solid #ddd;
-    text-align: left;
-}
-
-.content th {
-    background: #f5f5f5;
-    font-weight: 600;
 }
 
 /* Responsive design */
@@ -197,12 +192,3 @@ body {
     text-align: left;
 }
 .content th { background-color: #f2f2f2; }
-
-/* Ajuste para blocos de código */
-.content pre {
-    background: #f6f8fa;
-    padding: 16px;
-    border-radius: 6px;
-    overflow: auto;
-    border: 1px solid #e1e4e8;
-}

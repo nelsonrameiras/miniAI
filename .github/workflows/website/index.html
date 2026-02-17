@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ page.title | default: site.title }}</title>
+    <title>miniAI - Documentation</title>
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 
@@ -12,8 +12,8 @@
     <div class="container">
         <!-- Sidebar -->
         <div class="sidebar">
-            <h1>{{ site.title }}</h1>
-            <p>{{ site.description }}</p>
+            <h1>miniAI</h1>
+            <p>Neural Network in Pure C</p>
 
             <div class="badges">
                 <img src="https://img.shields.io/badge/language-C-blue.svg" alt="Language">
@@ -46,11 +46,14 @@
             {% else %}
                 <h1>Welcome to miniAI</h1>
                 <p>Select a section from the sidebar to explore the documentation.</p>
-                <p>miniAI is a lightweight, dependency-free neural network implementation designed for learning and OCR tasks.</p>
+                <br><br>
+                <p>miniAI is a Feed-forward neural network in pure C without ML libraries.</p>
+                <p>Features backpropagation, custom memory management, PNG image processing, and automated hyperparameter optimization.</p>
+                <p>Also, a robust CI/CD system.</p>
             {% endif %}
 
             <div class="footer" style="margin-top: 50px; border-top: 1px solid #eee; padding-top: 20px;">
-                <p>miniAI - Educational neural network in pure C</p>
+                <p>miniAI - Educational neural network in pure C.</p>
                 <p>Created by <a href="https://github.com/nelsonramosua">Nelson Ramos</a> |
                     <a href="https://github.com/nelsonramosua/miniAI/blob/main/LICENSE">MIT License</a>
                 </p>
