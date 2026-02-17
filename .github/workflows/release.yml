@@ -97,45 +97,17 @@ jobs:
         mkdir -p release/miniAI/IO/models
         mkdir -p release/miniAI/IO/configs
         mkdir -p release/miniAI/IO/images
-        
-        # Create quick start guide
-        cat > release/miniAI/QUICKSTART.md << 'EOF'
-        # miniAI - Quick Start
-        
-        ## Installation
-        
-        No installation required! Just run the executable.
-        
-        ## Basic Usage
-        
-        ```bash
-        # Show help
-        ./miniAI help
-        
-        # Train a model (static, fast)
-        ./miniAI train --dataset digits --static
-        
-        # Test the model
-        ./miniAI test --model IO/models/digit_brain.bin --dataset digits --static
-        
-        # Run benchmark
-        ./miniAI benchmark --dataset digits --static --reps 3
-        ```
-        
-        ## Full Documentation
-        
-        See README.md for complete documentation.
-        
-        ## Platform
-        
-        Built for: ${{ matrix.platform }}
-        Version: ${{ steps.version.outputs.version }}
-        EOF
+      
+        # Bundle QUICKSTART from docs/ — same source as the website
+        # Inject platform + version into a copy (strip Jekyll front matter first)
+        sed '/^---$/,/^---$/d' docs/quickstart.md > release/miniAI/QUICKSTART.md
+        echo "" >> release/miniAI/QUICKSTART.md
+        echo "---" >> release/miniAI/QUICKSTART.md
+        echo "Platform: ${{ matrix.platform }} | Version: ${{ steps.version.outputs.version }}" >> release/miniAI/QUICKSTART.md
         
         cd release
         zip -r ${{ matrix.artifact }}.zip miniAI/
         cd ..
-        
         mv release/${{ matrix.artifact }}.zip .
     
     - name: Generate checksums
@@ -182,73 +154,21 @@ jobs:
     - name: Generate release notes
       id: release_notes
       run: |
-        cat > release_notes.md << 'EOF'
-        # miniAI ${{ steps.version.outputs.version }}
-        
-        ## What's New
-        
-        This release includes the latest improvements to miniAI.
-        
-        ## Features
-        
-        - Complete neural network implementation in pure C
-        - Digit recognition (5×5 static, 8×8 PNG)
-        - Alphanumeric recognition (8×8 static, 16×16 PNG)
-        - Phrase recognition with automatic segmentation
-        - Hyperparameter optimization via benchmarking
-        - Unified command-line interface
-        
-        ## Downloads
-        
-        Choose the binary for your platform:
-        
-        - **Linux (x64)**: `miniAI-linux-x64.zip`
-        - **macOS (x64)**: `miniAI-macos-x64.zip`
-        
-        Verify downloads with the `.sha256` checksum files.
-        
-        ## Installation
-        
-        ```bash
-        # Extract
-        unzip miniAI-linux-x64.zip
-        cd miniAI
-        
-        # Run
-        ./miniAI help
-        ```
-        
-        ## Quick Start
-        
-        ```bash
-        # Train a model
-        ./miniAI train --dataset digits --static
-        
-        # Test the model
-        ./miniAI test --model IO/models/digit_brain.bin --dataset digits --static
-        
-        # Run benchmark
-        ./miniAI benchmark --dataset digits --static --reps 3
-        ```
-        
-        ## Documentation
-        
-        See the included README.md for complete documentation.
-        
-        ## Changelog
-        
-        EOF
-        
-        # Add git log if available
+        # Title with version
+        echo "# miniAI ${{ steps.version.outputs.version }}" > release_notes.md
+        echo "" >> release_notes.md
+
+        # Static body from template file
+        cat .github/docs/release-notes-template.md >> release_notes.md
+
+        # Dynamic changelog appended at the end
         if git describe --tags --abbrev=0 HEAD^ 2>/dev/null; then
           PREV_TAG=$(git describe --tags --abbrev=0 HEAD^)
-          echo "### Changes since $PREV_TAG" >> release_notes.md
+          echo "### Changes since ${PREV_TAG}" >> release_notes.md
           echo '```' >> release_notes.md
           git log --oneline ${PREV_TAG}..HEAD >> release_notes.md
           echo '```' >> release_notes.md
         fi
-        
-        cat release_notes.md
     
     - name: Create Release
       uses: softprops/action-gh-release@v1

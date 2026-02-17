@@ -1,0 +1,50 @@
+title: "[Show & Tell] "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Built something with miniAI, got interesting results, or extended it in a cool way? Share it here!
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What did you build / achieve?
+      description: Describe what you made or the results you got.
+      placeholder: I trained miniAI on... / I extended miniAI to...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: type
+    attributes:
+      label: Type
+      options:
+        - Trained a model / interesting results
+        - Extended the project
+        - Used it in another project
+        - Educational experiment
+        - Performance comparison
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: Training config, accuracy, dataset, code changes — whatever is relevant.
+      placeholder: |
+        Dataset: digits PNG
+        Hidden size: 512, LR: 0.02
+        Accuracy: 99.3%
+        
+        Key insight: ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: showcase
+    attributes:
+      label: Screenshots / code (optional)
+      description: Paste output, screenshots, or relevant code snippets.

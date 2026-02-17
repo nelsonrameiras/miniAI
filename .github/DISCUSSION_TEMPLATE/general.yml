@@ -1,0 +1,35 @@
+title: "[General] "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for general questions, ideas, or anything that doesn't fit a bug report or feature request.
+
+  - type: textarea
+    id: topic
+    attributes:
+      label: What's on your mind?
+      description: Share your question, thought, or topic of discussion.
+      placeholder: I was wondering about...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - Question about usage
+        - Question about the code
+        - Sharing results / experiments
+        - Off-topic / Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context (optional)
+      description: Any extra context, code snippets, or screenshots that help...
+      placeholder: Here's what I tried...

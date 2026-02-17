@@ -477,6 +477,18 @@ Benchmark complete!
 ./miniAI recognize --image phrase2.png
 ```
 
+### Docker
+```bash
+# Use without installing anything.
+docker pull nelsonramosua/miniai:latest
+
+# Treinar
+docker run --rm -v $(pwd)/IO:/app/IO nelsonramosua/miniai train --dataset digits --static
+
+# Ajuda
+docker run --rm nelsonramosua/miniai help
+```
+
 ## Command Reference
 
 ### Global Options

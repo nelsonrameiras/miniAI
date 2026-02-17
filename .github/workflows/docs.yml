@@ -5,8 +5,10 @@ on:
     branches: [ main ]
     paths:
       - 'README.md'
+      - 'CONTRIBUTING.md'
       - 'docs/**'
       - '.github/workflows/website/**'
+      - '.github/workflows/docs/**'
       - '.github/workflows/docs.yml'
   workflow_dispatch:
 
@@ -29,40 +31,28 @@ jobs:
       uses: actions/checkout@v4
     
     - name: Setup Pages
-      uses: actions/configure-pages@v4
+      uses: actions/configure-pages@v5
     
     - name: Create docs structure
       run: |
         mkdir -p _site_build/_layouts
         mkdir -p _site_build/assets/css
 
-        # Path to your website folder
+        # Path to website folder
         WEBSITE_DIR="./.github/workflows/website"
+
+        # Path to docs folder
+        DOCS_DIR="./.github/workflows/docs"
 
         # 1. 2. Set index as template for Markdown pages & Copy CSS
         cp -f "$WEBSITE_DIR/index.html" _site_build/_layouts/default.html
         cp -f "$WEBSITE_DIR/index.css" _site_build/assets/css/style.css
 
-        # 3. Copy the original index to the root (main static page)
-        cat > _site_build/index.md << 'EOF'
-        ---
-        layout: default
-        title: Home
-        permalink: /
-        ---
-
-        # Welcome to miniAI
-
-        Select a section from the sidebar to explore the documentation.
-
-        <br>
-
-        **miniAI** is a Feed-forward neural network in pure C without ML libraries.
-
-        Features backpropagation, custom memory management, PNG image processing, and automated hyperparameter optimization.
-
-        Also, a robust CI/CD system.
-        EOF
+        # Pages from docs/
+        cp -f "$DOCS_DIR/index.md"        _site_build/index.md
+        cp -f "$DOCS_DIR/quickstart.md"   _site_build/quickstart.md
+        cp -f "$DOCS_DIR/api.md"          _site_build/api.md
+        cp -f "$DOCS_DIR/architecture.md" _site_build/architecture.md
 
         # 4. Generate README page (accessible as readme.html)
         echo -e "---\nlayout: default\ntitle: README\npermalink: /readme.html\n---\n" > _site_build/readme.md
@@ -76,138 +66,6 @@ jobs:
           echo "---" >> _site_build/contributing.md
           cat CONTRIBUTING.md >> _site_build/contributing.md
         fi
-
-        # 6. quickstart
-
-        # Create additional documentation pages
-        cat > _site_build/quickstart.md << 'EOF'
-        ---
-        layout: default
-        title: Quick Start
-        permalink: /quickstart.html
-        ---
-
-        # Quick Start Guide
-        
-        ## Installation
-        
-        Download the latest release for your platform:
-        - [Linux x64](https://github.com/nelsonramosua/miniAI/releases/latest)
-        - [macOS x64](https://github.com/nelsonramosua/miniAI/releases/latest)
-        
-        ## First Steps
-        
-        ```bash
-        # Extract the archive
-        unzip miniAI-linux-x64.zip
-        cd miniAI
-        
-        # Train your first model
-        ./miniAI train --dataset digits --static
-        
-        # Test the model
-        ./miniAI test --model IO/models/digit_brain.bin --dataset digits --static
-        ```
-        
-        ## What's Next?
-        
-        - Check out the [full documentation](index.md)
-        - Try different datasets (alpha, custom)
-        - Run benchmarks to optimize hyperparameters
-        - Experiment with phrase recognition
-        EOF
-        
-        cat > _site_build/api.md << 'EOF'
-        ---
-        layout: default
-        title: API Reference
-        permalink: /api.html
-        ---
-
-        # API Reference
-        
-        ## Commands
-        
-        ### train
-        Train a new neural network model.
-        
-        ```bash
-        ./miniAI train --dataset <type> [--static|--data [path]]
-        ```
-        
-        ### test
-        Test a trained model on a dataset or image.
-        
-        ```bash
-        ./miniAI test --model <path> --dataset <type> [--static|--data]
-        ./miniAI test --model <path> --image <path>
-        ```
-        
-        ### benchmark
-        Run hyperparameter grid search.
-        
-        ```bash
-        ./miniAI benchmark --dataset <type> [--static|--data] [--reps <n>]
-        ```
-        
-        ### recognize
-        Recognize text in an image.
-        
-        ```bash
-        ./miniAI recognize --model <path> --image <path>
-        ```
-        
-        ## Options
-        
-        - `--dataset <type>` - Dataset type: digits, alpha
-        - `--data [path]` - Use PNG dataset (optional path)
-        - `--static` - Use static in-memory dataset
-        - `--model <path>` - Path to model file
-        - `--image <path>` - Path to image file
-        - `--grid <size>` - Grid size (5, 8, or 16)
-        - `--reps <n>` - Number of benchmark repetitions
-        EOF
-
-        cat > _site_build/architecture.md << 'EOF'
-        ---
-        layout: default
-        title: Architecture
-        permalink: /architecture.html
-        ---
-
-        # Architecture
-        
-        ## System Overview
-        
-        miniAI is organized into several key components:
-        
-        ### Core Neural Network
-        - **Arena**: Custom memory allocator
-        - **Tensor**: Matrix operations
-        - **Model**: Network structure
-        - **Grad**: Backpropagation
-        - **Glue**: High-level training API
-        
-        ### CLI Layer
-        - **ArgParse**: Command-line parsing
-        - **Commands**: Command dispatcher
-        - **Command implementations**: Train, Test, Benchmark, Recognize
-        
-        ### Dataset Management
-        - **Dataset**: Unified dataset abstraction
-        - **TestUtils**: Testing and evaluation
-        
-        ### Image Processing
-        - **ImageLoader**: PNG loading via stb_image
-        - **ImagePreprocess**: Grayscale, binarization, resizing
-        - **Segmenter**: Character segmentation for phrases
-        
-        ## Data Flow
-        
-        1. **Training**: Dataset → Model → Trained weights
-        2. **Testing**: Input → Model → Predictions
-        3. **Recognition**: Image → Preprocessing → Segmentation → Model → Text
-        EOF
 
     - name: Build with Jekyll
       uses: actions/jekyll-build-pages@v1
