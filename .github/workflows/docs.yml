@@ -49,6 +49,8 @@ jobs:
         cp -f "$WEBSITE_DIR/index.html" _site_build/_layouts/default.html
         cp -f "$WEBSITE_DIR/index.css" _site_build/assets/css/style.css
 
+        cp -fr "$DOCS_DIR/diagrams"       _site_build/.github/workflows/docs/diagrams
+
         # Pages from docs/
         cp -f "$DOCS_DIR/index.md"        _site_build/index.md
         cp -f "$DOCS_DIR/quickstart.md"   _site_build/quickstart.md
