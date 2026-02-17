@@ -1,5 +1,6 @@
 # miniAI
 
+![Visits](https://visitorbadge.vercel.app//api/badge/66ee5022-57a6-4339-a40d-1bfed67831d0?style=flat&color=00c220&labelColor=616060)
 [![Language](https://img.shields.io/badge/language-C-blue.svg)](https://devdocs.io/c/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 ![CI/CD Pipeline](https://github.com/nelsonramosua/miniAI/workflows/CI%2FCD%20Pipeline/badge.svg)
@@ -58,6 +59,11 @@
 - **Arena Allocator**: Efficient and deterministic memory allocation system.
 - **Scratch Arena**: Temporary recyclable memory between operations.
 - **Permanent Arena**: Persistent memory for weights and model structures.
+
+<p align="center">
+    <b>Memory Architecture</b><br>
+    <img src=".github/workflows/docs/diagrams/memoryArchitecture.png" alt="Memory Architecture">
+</p>
 
 ### Image Processing
 - **PNG Loading**: Native PNG image support via stb_image.
@@ -149,6 +155,13 @@ miniAI/
 └── README.md                  # This file
 ```
 
+### Module Dependencies
+
+<p align="center">
+    <b>Module Dependencies</b><br>
+    <img src=".github/workflows/docs/diagrams/moduleDependencies.png" alt="Module Dependencies">
+</p>
+
 ## Compilation
 
 ### Prerequisites
@@ -220,6 +233,11 @@ miniAI currently supports two types of datasets, for flexibility and performance
 - **Use case**: Production models, phrase recognition.
 - **Models**: `digit_brain_png.bin`, `alpha_brain_png.bin`.
 
+<p align="center">
+    <b>Dataset Types</b><br>
+    <img src=".github/workflows/docs/diagrams/datasetTypes.png" alt="Dataset Types">
+</p>
+
 ### Important Notes
 
 **Models are NOT interchangeable!** A model trained on static data cannot be used with PNG data (and vice-versa) due to different input dimensions!
@@ -246,6 +264,11 @@ miniAI currently supports two types of datasets, for flexibility and performance
 ## Usage
 
 ### 1. Training Models
+
+<p align="center">
+    <b>Training Data Flow</b><br>
+    <img src=".github/workflows/docs/diagrams/trainingDataFlow.png" alt="Training Data Flow">
+</p>
 
 #### Static Dataset (Faster)
 ```bash
@@ -547,6 +570,13 @@ Show help message.
 
 ## Technical Architecture
 
+### System Architecture
+
+<p align="center">
+    <b>System Architecture</b><br>
+    <img src=".github/workflows/docs/diagrams/sysArchitecture.png" alt="System Architecture">
+</p>
+
 ### Tensor Structure
 
 ```c
@@ -609,6 +639,11 @@ Tensor* glueForward(Model *m, Tensor *input, Arena *scratch) {
     return currentInput;
 }
 ```
+#### Forward Propagation Dataflow
+<p align="center">
+    <b>Forward Pass</b><br>
+    <img src=".github/workflows/docs/diagrams/forwardPass.png" alt="Forward Pass">
+</p>
 
 ### Backpropagation
 
@@ -641,6 +676,12 @@ The implemented backpropagation algorithm includes:
    delta_prev = (W^T * delta_current) .* ReLU'(z_prev)
    ```
    where `.*` is element-wise multiplication
+
+#### Backward Propagation Dataflow, on Layer i
+<p align="center">
+    <b>Backward Pass on Layer i</b><br>
+    <img src=".github/workflows/docs/diagrams/backwardPass_Layer_i.png" alt="Backward Pass">
+</p>
 
 ### Activation Functions
 
@@ -838,6 +879,13 @@ CharSequence *seq = segmentPhrase(image, cfg);
 5. Resizing to uniform grid.
 6. Space detection (gaps larger than threshold).
 
+#### Phrase Recognition Dataflow
+
+<p align="center">
+    <b>Phrase Recognition Flow</b><br>
+    <img src=".github/workflows/docs/diagrams/phraseRecognitionFlow.png" alt="Phrase Recognition Flow">
+</p>
+
 ### Multi-threading (OpenMP)
 
 To ensure this pure-C implementation runs fast on the CPU, heavily nested loops (like matrix dot products and derivative mapping) are parallelized with OpenMP pragmas.
@@ -984,6 +1032,13 @@ Techniques to prevent overfitting:
 ### Xavier/He Initialization
 
 Smart initialization based on layer size:
+
+### Inference Dataflow
+
+<p align="center">
+    <b>Inference Dataflow</b><br>
+    <img src=".github/workflows/docs/diagrams/inferenceDataFlow.png" alt="Inference Data Flow">
+</p>
 
 ```c
 void tensorFillXavier(Tensor *t, int inSize) {

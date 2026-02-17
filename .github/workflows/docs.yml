@@ -53,6 +53,7 @@ jobs:
         cp -f "$DOCS_DIR/quickstart.md"   _site_build/quickstart.md
         cp -f "$DOCS_DIR/api.md"          _site_build/api.md
         cp -f "$DOCS_DIR/architecture.md" _site_build/architecture.md
+        cp -f "$DOCS_DIR/diagrams.md"     _site_build/diagrams.md
 
         # 4. Generate README page (accessible as readme.html)
         echo -e "---\nlayout: default\ntitle: README\npermalink: /readme.html\n---\n" > _site_build/readme.md

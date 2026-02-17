@@ -6,6 +6,8 @@ permalink: /architecture.html
 
 # Architecture
 
+For visual diagrams of every layer, see **[Diagrams](diagrams.html)** — system architecture, data flows, backpropagation, memory model, and module dependencies.
+
 ## System Overview
 
 miniAI is organized into four layers that communicate top-down:
