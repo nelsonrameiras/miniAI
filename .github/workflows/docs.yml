@@ -39,16 +39,30 @@ jobs:
         # Path to your website folder
         WEBSITE_DIR="./.github/workflows/website"
 
-        echo "Verifying files in $WEBSITE_DIR..."
-        ls -la $WEBSITE_DIR
-
         # 1. 2. Set index as template for Markdown pages & Copy CSS
         cp -f "$WEBSITE_DIR/index.html" _site_build/_layouts/default.html
         cp -f "$WEBSITE_DIR/index.css" _site_build/assets/css/style.css
 
         # 3. Copy the original index to the root (main static page)
-        echo -e "---\nlayout: default\n---\n" > _site_build/index.html
-        cat $WEBSITE_DIR/index.html >> _site_build/index.html
+        cat > _site_build/index.md << 'EOF'
+        ---
+        layout: default
+        title: Home
+        permalink: /
+        ---
+
+        # Welcome to miniAI
+
+        Select a section from the sidebar to explore the documentation.
+
+        <br>
+
+        **miniAI** is a Feed-forward neural network in pure C without ML libraries.
+
+        Features backpropagation, custom memory management, PNG image processing, and automated hyperparameter optimization.
+
+        Also, a robust CI/CD system.
+        EOF
 
         # 4. Generate README page (accessible as readme.html)
         echo -e "---\nlayout: default\ntitle: README\npermalink: /readme.html\n---\n" > _site_build/readme.md
