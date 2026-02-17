@@ -37,14 +37,17 @@ jobs:
         mkdir -p _site_build/assets/css
 
         # Path to your website folder
-        WEBSITE_PATH=".github/workflows/website"
+        WEBSITE_DIR="./.github/workflows/website"
+
+        echo "Verifying files in $WEBSITE_DIR..."
+        ls -la $WEBSITE_DIR
 
         # 1. 2. Set index as template for Markdown pages & Copy CSS
-        cp $WEBSITE_PATH/index.html _site_build/_layouts/default.html
-        cp $WEBSITE_PATH/style.css _site_build/assets/css/
+        cp -f "$WEBSITE_DIR/index.html" _site_build/_layouts/default.html
+        cp -f "$WEBSITE_DIR/style.css" _site_build/assets/css/
 
         # 3. Copy the original index to the root (main static page)
-        cp $WEBSITE_PATH/index.html _site_build/index.html
+        cp -f "$WEBSITE_DIR/index.html" _site_build/index.html
 
         # 4. Generate README page (accessible as readme.html)
         echo -e "---\nlayout: default\ntitle: README\npermalink: /readme.html\n---\n" > _site_build/readme.md
@@ -68,7 +71,7 @@ jobs:
         title: Quick Start
         permalink: /quickstart.html
         ---
-        
+
         # Quick Start Guide
         
         ## Installation
