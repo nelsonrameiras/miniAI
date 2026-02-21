@@ -1,0 +1,132 @@
+# Label Definitions for miniAI
+# Use with: gh label create --repo nelsonramosua/miniAI -f .github/labels.yml
+
+# Area Labels (what part of the code)
+- name: "core-neural-network"
+  color: "0052cc"
+  description: "Changes to core ML engine (Arena, Tensor, Model, Grad, Glue)"
+
+- name: "cli"
+  color: "5319e7"
+  description: "Command-line interface and argument parsing"
+
+- name: "dataset"
+  color: "1d76db"
+  description: "Dataset loading and management"
+
+- name: "image-processing"
+  color: "fbca04"
+  description: "Image loading, preprocessing, segmentation"
+
+- name: "ci-cd"
+  color: "0e8a16"
+  description: "CI/CD workflows, GitHub Actions, automation"
+
+- name: "build-system"
+  color: "d93f0b"
+  description: "Makefile, Dockerfile, build configuration"
+
+- name: "documentation"
+  color: "0075ca"
+  description: "README, docs, contributing guidelines, website"
+
+- name: "tests"
+  color: "bfd4f2"
+  description: "Testing utilities and test code"
+
+- name: "new-area"
+  color: "ff6347"
+  description: "Changes to the new feature area"
+
+# Type Labels (what kind of change)
+- name: "bug"
+  color: "d73a4a"
+  description: "Something isn't working"
+
+- name: "enhancement"
+  color: "a2eeef"
+  description: "New feature or request"
+
+- name: "performance"
+  color: "fef2c0"
+  description: "Performance improvements"
+
+- name: "refactor"
+  color: "c2e0c6"
+  description: "Code refactoring (no behavior change)"
+
+# Status Labels
+- name: "needs-more-info"
+  color: "d876e3"
+  description: "Issue needs more details to proceed"
+
+- name: "needs-description"
+  color: "e99695"
+  description: "PR needs a better description"
+
+- name: "stale"
+  color: "eeeeee"
+  description: "Inactive for extended period"
+
+- name: "work-in-progress"
+  color: "fbca04"
+  description: "PR is still being worked on"
+
+- name: "blocked"
+  color: "b60205"
+  description: "Blocked by another issue or external dependency"
+
+- name: "needs-review"
+  color: "0e8a16"
+  description: "Ready for maintainer review"
+
+# Priority Labels
+- name: "high-priority"
+  color: "d73a4a"
+  description: "High priority issue or PR"
+
+- name: "low-priority"
+  color: "fef2c0"
+  description: "Low priority, nice-to-have"
+
+# Special Labels
+- name: "good first issue"
+  color: "7057ff"
+  description: "Good for newcomers"
+
+- name: "help wanted"
+  color: "008672"
+  description: "Extra attention is needed"
+
+- name: "security"
+  color: "d73a4a"
+  description: "Security-related issue"
+
+- name: "pinned"
+  color: "0e8a16"
+  description: "Pinned issue, never mark as stale"
+
+- name: "duplicate"
+  color: "cfd3d7"
+  description: "This issue or PR already exists"
+
+- name: "invalid"
+  color: "e4e669"
+  description: "This doesn't seem right"
+
+- name: "wontfix"
+  color: "ffffff"
+  description: "This will not be worked on"
+
+# Auto-generated Labels
+- name: "dependencies"
+  color: "0366d6"
+  description: "Pull requests that update a dependency file"
+
+- name: "models"
+  color: "c5def5"
+  description: "Changes to trained models or configs"
+
+- name: "training-data"
+  color: "f9d0c4"
+  description: "Changes to training images or dataset generation"

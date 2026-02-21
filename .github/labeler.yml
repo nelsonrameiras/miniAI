@@ -1,0 +1,85 @@
+# Auto-labeling configuration for miniAI PRs
+# Based on which files are changed
+
+documentation:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'README.md'
+      - 'CONTRIBUTING.md'
+      - 'docs/**'
+      - '.github/workflows/docs.yml'
+      - '.github/workflows/website/**'
+
+core-neural-network:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'src/core/**'
+      - 'headers/core/**'
+      - 'AIHeader.h'
+
+cli:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'src/cli/**'
+      - 'headers/cli/**'
+      - 'miniAI.c'
+
+dataset:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'src/dataset/**'
+      - 'headers/dataset/**'
+      - 'IO/MemoryDatasets.c'
+      - 'IO/MemoryDatasets.h'
+
+image-processing:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'src/image/**'
+      - 'headers/image/**'
+      - 'IO/external/stb_image.h'
+
+ci-cd:
+  - changed-files:
+    - any-glob-to-any-file:
+      - '.github/workflows/**'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/DISCUSSION_TEMPLATE/**'
+      - '.github/pull_request_template.md'
+      - '.github/dependabot.yml'
+
+build-system:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'Makefile'
+      - 'Dockerfile'
+
+tests:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'src/cli/commands/Test.c'
+      - 'src/dataset/TestUtils.c'
+      - 'headers/dataset/TestUtils.h'
+
+models:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'IO/models/**'
+      - 'IO/configs/**'
+
+training-data:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'IO/images/**'
+      - 'tools/generateChars.py'
+      - 'tools/generatePhrases.py'
+
+dependencies:
+  - changed-files:
+    - any-glob-to-any-file:
+      - '.github/dependabot.yml'
+
+new-area:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'src/new-feature/**'  

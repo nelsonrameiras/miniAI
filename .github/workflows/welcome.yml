@@ -1,0 +1,51 @@
+name: Welcome New Contributors
+
+on:
+  issues:
+    types: [opened]
+  pull_request_target:
+    types: [opened]
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  welcome:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/first-interaction@v3.0.0
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          issue-message: |
+            Welcome to the miniAI community!
+            
+            Thanks for opening your first issue! We appreciate you taking the time to contribute.
+            
+            Before we proceed, please make sure:
+            - [ ] You've checked existing issues to avoid duplicates.
+            - [ ] You've provided enough details for us to understand the problem.
+            - [ ] You've included reproduction steps (if it's a bug).
+            
+            A maintainer will review your issue shortly.
+            
+            **Useful links:**
+            - [Contributing Guidelines](https://github.com/nelsonramosua/miniAI/blob/main/CONTRIBUTING.md)
+            - [Documentation](https://nelsonramosua.github.io/miniAI/)
+
+          pr-message: |
+            Welcome to the miniAI community!
+
+            Thanks for your first Pull Request! We're excited to review your contribution.
+
+            **Before merging, please ensure:**
+            - [ ] You've read our [Contributing Guidelines](https://github.com/nelsonramosua/miniAI/blob/main/CONTRIBUTING.md).
+            - [ ] Your code follows our style guide (pex, 4 spaces, camelCase functions).
+            - [ ] You've tested your changes locally.
+            - [ ] Your commit messages are descriptive.
+            
+            A maintainer will review your changes shortly. Don't hesitate to ask questions!
+            
+            **Useful links:**
+            - [Documentation](https://nelsonramosua.github.io/miniAI/).
+            - [Architecture Overview](https://nelsonramosua.github.io/miniAI/architecture.html).

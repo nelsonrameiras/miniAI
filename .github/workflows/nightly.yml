@@ -91,7 +91,7 @@ jobs:
         # Run benchmarks
         ./miniAI benchmark --dataset digits --static --reps 2
         ./miniAI benchmark --dataset alpha --static --reps 2
-      timeout-minutes: 180
+      timeout-minutes: 240
       continue-on-error: true
     
     - name: Collect metrics
@@ -166,7 +166,7 @@ jobs:
       uses: actions/checkout@v4
     
     - name: Install profiling tools
-      run: sudo apt-get update && sudo apt-get install -y linux-tools-generic perf
+      run: sudo apt-get update && sudo apt-get install -y linux-tools-common linux-tools-$(uname -r)
       continue-on-error: true
     
     - name: Build with profiling

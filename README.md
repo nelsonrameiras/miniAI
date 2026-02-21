@@ -1,6 +1,5 @@
 # miniAI
 
-![Visits](https://visitorbadge.vercel.app//api/badge/66ee5022-57a6-4339-a40d-1bfed67831d0?style=flat&color=00c220&labelColor=616060)
 [![Language](https://img.shields.io/badge/language-C-blue.svg)](https://devdocs.io/c/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 ![CI/CD Pipeline](https://github.com/nelsonramosua/miniAI/workflows/CI%2FCD%20Pipeline/badge.svg)
