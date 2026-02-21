@@ -16,8 +16,8 @@ jobs:
     steps:
       - uses: actions/first-interaction@v3.0.0
         with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          issue-message: |
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          issue_message: |
             Welcome to the miniAI community!
             
             Thanks for opening your first issue! We appreciate you taking the time to contribute.
@@ -33,7 +33,7 @@ jobs:
             - [Contributing Guidelines](https://github.com/nelsonramosua/miniAI/blob/main/CONTRIBUTING.md)
             - [Documentation](https://nelsonramosua.github.io/miniAI/)
 
-          pr-message: |
+          pr_message: |
             Welcome to the miniAI community!
 
             Thanks for your first Pull Request! We're excited to review your contribution.
