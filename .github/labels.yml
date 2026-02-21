@@ -1,5 +1,4 @@
 # Label Definitions for miniAI
-# Use with: gh label create --repo nelsonramosua/miniAI -f .github/labels.yml
 
 # Area Labels (what part of the code)
 - name: "core-neural-network"
@@ -7,7 +6,7 @@
   description: "Changes to core ML engine (Arena, Tensor, Model, Grad, Glue)"
 
 - name: "cli"
-  color: "5319e7"
+  color: "5319e6"
   description: "Command-line interface and argument parsing"
 
 - name: "dataset"
