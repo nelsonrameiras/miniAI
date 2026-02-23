@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <math.h>
 #include <stdio.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 Model* modelCreate(Arena *arena, int *dims, int count) {
     Model *m = (Model*)arenaAlloc(arena, sizeof(Model));
@@ -32,8 +35,10 @@ Model* modelCreate(Arena *arena, int *dims, int count) {
 }
 
 int modelSave(Model *m, const char *filename) {
-    FILE *f = fopen(filename, "wb");
-    if (!f) { fprintf(stderr, "Error: Could not open %s for writing\n", filename); return -1; }
+    int fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+    if (fd < 0) { fprintf(stderr, "Error: Could not open %s for writing\n", filename); return -1; }
+    FILE *f = fdopen(fd, "wb");
+    if (!f) { fprintf(stderr, "Error: Could not open %s for writing\n", filename); close(fd); return -1; }
     
     fwrite(&m->count, sizeof(int), 1, f);
     
@@ -45,7 +50,7 @@ int modelSave(Model *m, const char *filename) {
     
     for (int i = 0; i < m->count; i++) {
         // save weights
-        fwrite(m->layers[i].w->data, sizeof(float), m->layers[i].w->rows * m->layers[i].w->cols, f);
+        fwrite(m->layers[i].w->data, sizeof(float), (size_t)m->layers[i].w->rows * (size_t)m->layers[i].w->cols, f);
         // save biases
         fwrite(m->layers[i].b->data, sizeof(float), m->layers[i].b->rows, f);
     }
@@ -82,7 +87,7 @@ int modelLoad(Model *m, const char *filename) {
     }
 
     for (int i = 0; i < m->count; i++) {
-        size_t w_size = m->layers[i].w->rows * m->layers[i].w->cols;
+        size_t w_size = (size_t)m->layers[i].w->rows * (size_t)m->layers[i].w->cols;
         size_t b_size = m->layers[i].b->rows;
         if (fread(m->layers[i].w->data, sizeof(float), w_size, f) != w_size) { fprintf(stderr, "Error: Failed to read weights for layer %d from %s\n", i, filename); fclose(f); return -1; }
         if (fread(m->layers[i].b->data, sizeof(float), b_size, f) != b_size) { fprintf(stderr, "Error: Failed to read biases for layer %d from %s\n", i, filename); fclose(f); return -1; }
