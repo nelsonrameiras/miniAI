@@ -8,6 +8,7 @@
 #include <math.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 extern TrainingConfig g_trainConfig;
 

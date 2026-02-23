@@ -11,10 +11,10 @@ Tensor* tensorAlloc(Arena *arena, int rows, int cols) {
     if (rows <= 0 || cols <= 0) { fprintf(stderr, "Error: tensorAlloc received non-positive dimensions (%d x %d)\n", rows, cols); return NULL; }
     // Compute total number of elements using size_t and check for overflow in nrows * ncols
     size_t nrows = (size_t)rows; size_t ncols = (size_t)cols;
-    if (ncols != 0 && nrows > SIZE_MAX / ncols) { fprintf(stderr, "Error: tensorAlloc dimension overflow (%d x %d)\n", rows, cols); return NULL; }
+    if (nrows > SIZE_MAX / ncols) { fprintf(stderr, "Error: tensorAlloc dimension overflow (%d x %d)\n", rows, cols); return NULL; }
     size_t elements = nrows * ncols;
     // Check for overflow when scaling by sizeof(float) 
-    if (elements != 0 && elements > SIZE_MAX / sizeof(float)) { fprintf(stderr, "Error: tensorAlloc size overflow for (%d x %d)\n", rows, cols); return NULL; }
+    if (elements > SIZE_MAX / sizeof(float)) { fprintf(stderr, "Error: tensorAlloc size overflow for (%d x %d)\n", rows, cols); return NULL; }
 
     t->rows = rows;
     t->cols = cols;

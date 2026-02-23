@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 Model* modelCreate(Arena *arena, int *dims, int count) {
     Model *m = (Model*)arenaAlloc(arena, sizeof(Model));
