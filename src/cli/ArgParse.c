@@ -143,16 +143,16 @@ CommandArgs parseArgs(int argc, char **argv) {
     }
     
     // Parse options
-    for (int i = 2; i < argc; i++) {
+    int i = 2;
+    while (i < argc) {
         if (strcmp(argv[i], "--dataset") == 0 && i + 1 < argc) {
             i++;
             if (strcmp(argv[i], "digits") == 0) {
                 args.dataset = DATASET_SPEC_DIGITS;
             } else if (strcmp(argv[i], "alpha") == 0) {
                 args.dataset = DATASET_SPEC_ALPHA;
-            } else {
-                args.dataset = DATASET_SPEC_CUSTOM;
-            }
+            } else args.dataset = DATASET_SPEC_CUSTOM;
+            i++;
         } else if (strcmp(argv[i], "--data") == 0) {
             // Check if next argument is a path (not a flag)
             if (i + 1 < argc && argv[i + 1][0] != '-') {
@@ -163,31 +163,34 @@ CommandArgs parseArgs(int argc, char **argv) {
                 args.dataPath = "";  // Empty string signals "use default"
             }
             if (args.useStatic == -1) args.useStatic = 0;  // --data implies PNG
+            i++;
         } else if (strcmp(argv[i], "--static") == 0) {
-            args.useStatic = 1;
+            args.useStatic = 1; i++;
         } else if (strcmp(argv[i], "--model") == 0 && i + 1 < argc) {
-            args.modelFile = argv[++i];
+            args.modelFile = argv[++i]; i++;
         } else if (strcmp(argv[i], "--image") == 0 && i + 1 < argc) {
-            args.imageFile = argv[++i];
+            args.imageFile = argv[++i]; i++;
         } else if (strcmp(argv[i], "--config") == 0 && i + 1 < argc) {
-            args.configFile = argv[++i];
+            args.configFile = argv[++i]; i++;
         } else if (strcmp(argv[i], "--grid") == 0 && i + 1 < argc) {
-            args.gridSize = atoi(argv[++i]);
+            args.gridSize = atoi(argv[++i]); i++;
         } else if (strcmp(argv[i], "--reps") == 0 && i + 1 < argc) {
-            args.benchmarkReps = atoi(argv[++i]);
+            args.benchmarkReps = atoi(argv[++i]); i++;
         } else if (strcmp(argv[i], "--load") == 0) {
-            args.loadModel = 1;
+            args.loadModel = 1; i++;
         } else if (strcmp(argv[i], "--verbose") == 0 || strcmp(argv[i], "-v") == 0) {
-            args.verbose = 1;
+            args.verbose = 1; i++;
         } else if (strcmp(argv[i], "digits") == 0) {
             // Legacy: support "command digits" format
-            args.dataset = DATASET_SPEC_DIGITS;
+            args.dataset = DATASET_SPEC_DIGITS; i++;
         } else if (strcmp(argv[i], "alpha") == 0) {
             // Legacy: support "command alpha" format
-            args.dataset = DATASET_SPEC_ALPHA;
+            args.dataset = DATASET_SPEC_ALPHA; i++;
         } else if (strcmp(argv[i], "run") == 0) {
             // Legacy: support "run" as load flag
-            args.loadModel = 1;
+            args.loadModel = 1; i++;
+        } else {
+            i++; // Unrecognized argument, skip it
         }
     }
     

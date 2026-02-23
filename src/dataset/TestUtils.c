@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 
 extern TrainingConfig g_trainConfig;
 
@@ -365,12 +367,12 @@ void loadBestConfig(const char *configFile) {
 }
 
 void saveBestConfig(const char *configFile, int hiddenSize, float lr) {
-    FILE *f = fopen(configFile, "w");
-    if (f) {
-        fprintf(f, "%d\n%f", hiddenSize, lr);
-        fclose(f);
-        printf("Saved optimized config to %s\n", configFile);
-    } else {
-        fprintf(stderr, "Warning: Could not save config to %s\n", configFile);
-    }
+    int fd = open(configFile, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+    if (fd == -1) { fprintf(stderr, "Warning: Could not save config to %s\n", configFile); return; }
+    FILE *f = fdopen(fd, "w");
+    if (!f) { close(fd); fprintf(stderr, "Warning: Could not save config to %s\n", configFile); return; }
+
+    fprintf(f, "%d\n%f", hiddenSize, lr);
+    fclose(f);
+    printf("Saved optimized config to %s\n", configFile);
 }

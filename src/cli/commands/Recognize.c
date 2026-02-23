@@ -8,6 +8,7 @@
 #include <string.h>
 
 extern TrainingConfig g_trainConfig;
+extern void loadBestConfig(const char *configFile);
 
 int cmdRecognize(CommandArgs args) {
     printf("=== PHRASE RECOGNITION MODE ===\n\n");
@@ -60,7 +61,6 @@ int cmdRecognize(CommandArgs args) {
 
     // Load config file if provided, or use default config for this model
     if (args.configFile) {
-        extern void loadBestConfig(const char *configFile);
         loadBestConfig(args.configFile);
     } else {
         // Auto-detect config file based on model name
@@ -78,7 +78,6 @@ int cmdRecognize(CommandArgs args) {
         }
 
         if (configFile) {
-            extern void loadBestConfig(const char *configFile);
             loadBestConfig(configFile);
             printf("Auto-loaded config from: %s\n", configFile);
         }

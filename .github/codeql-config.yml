@@ -1,0 +1,5 @@
+name: "miniAI CodeQL Config"
+
+# Ignores external code, and focuses on only our C code.
+paths-ignore:
+  - "IO/external/**" # ignores stb_image.h.

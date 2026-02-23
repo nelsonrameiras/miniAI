@@ -166,9 +166,9 @@ static uint8_t* extractAndCenter(uint8_t *gray, int width, int height, uint8_t t
     if (margin < 2) margin = 2;
     int squareSize = maxDim + 2 * margin;
 
-    uint8_t *square = malloc(squareSize * squareSize);
+    uint8_t *square = malloc((size_t)squareSize * (size_t)squareSize);
     if (!square) return NULL;
-    memset(square, 255, squareSize * squareSize);  // white bgr
+    memset(square, 255, (size_t)squareSize * (size_t)squareSize);  // white bgr
 
     // center by center of mass (NOT bbox center)
     float squareCenter = squareSize / 2.0f;
