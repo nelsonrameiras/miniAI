@@ -183,9 +183,9 @@ static float* extractCharacter(uint8_t *gray, uint8_t *binary, int imgWidth, int
     if (margin < 2) margin = 2;
     int squareSize = maxDim + 2 * margin;
 
-    uint8_t *square = (uint8_t*)malloc(squareSize * squareSize);
+    uint8_t *square = (uint8_t*)malloc((size_t)squareSize * (size_t)squareSize);
     if (!square) return NULL;
-    memset(square, 255, squareSize * squareSize);  // white bgr
+    memset(square, 255, (size_t)squareSize * (size_t)squareSize);  // white bgr
 
     // 4. center by center of mass (and not by bounding box center)
     float squareCenter = squareSize / 2.0f;
@@ -203,7 +203,7 @@ static float* extractCharacter(uint8_t *gray, uint8_t *binary, int imgWidth, int
     }
 
     // 6. resize to target size using bilinear interpolation (grayscale)
-    uint8_t *resizedGray = (uint8_t*)malloc(targetSize * targetSize);
+    uint8_t *resizedGray = (uint8_t*)malloc((size_t)targetSize * (size_t)targetSize);
     if (!resizedGray) { free(square); return NULL; }
 
     float scaleX = (float)squareSize / targetSize;
@@ -238,7 +238,7 @@ static float* extractCharacter(uint8_t *gray, uint8_t *binary, int imgWidth, int
     free(square);
 
     // 7. binarize and normalize
-    float *normalized = (float*)malloc(targetSize * targetSize * sizeof(float));
+    float *normalized = (float*)malloc((size_t)targetSize * (size_t)targetSize * sizeof(float));
     if (!normalized) { free(resizedGray); return NULL; }
 
     (void)threshold; // unused but passed, because original implementation required it, and it could still be used in the future.
@@ -317,7 +317,7 @@ CharSequence* segmentPhrase(RawImage *img, SegmenterConfig cfg) {
 
     // 3. binarize the image (for segmentation only!)
     uint8_t threshold = calculateOtsuThreshold(gray, img->width * img->height);
-    uint8_t *binary = (uint8_t*)malloc(img->width * img->height);
+    uint8_t *binary = (uint8_t*)malloc((size_t)img->width * (size_t)img->height);
     if (!binary) { free(gray); return NULL; }
 
     for (int i = 0; i < img->width * img->height; i++) {
