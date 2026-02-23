@@ -3,14 +3,14 @@
 #include "headers/cli/Commands.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
+#include "headers/utils/Random.h"
 
 // Global training configuration
 TrainingConfig g_trainConfig;
 
 int main(int argc, char **argv) {
     // Initialize random seed
-    srand(time(NULL));
+    randomize();
     
     // Initialize default training configuration
     g_trainConfig = defaultTrainingConfig();

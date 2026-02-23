@@ -30,7 +30,7 @@ miniAI/
 │   ├── cli/               # ArgParse, Commands
 │   ├── dataset/           # Dataset, TestUtils
 │   ├── image/             # ImageLoader, ImagePreprocess, Segmenter
-│   └── Utils.h
+│   └── utils/
 ├── src/                   # Implementations
 │   ├── core/
 │   ├── cli/

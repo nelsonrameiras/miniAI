@@ -3,7 +3,7 @@
 #include "../../../headers/dataset/TestUtils.h"
 #include "../../../headers/core/Model.h"
 #include "../../../headers/core/Glue.h"
-#include "../../../headers/Utils.h"
+#include "../../../headers/utils/Utils.h"
 #include "../../../headers/image/ImageLoader.h"
 #include "../../../headers/image/ImagePreprocess.h"
 #include "../../../AIHeader.h"

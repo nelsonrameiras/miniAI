@@ -31,7 +31,7 @@ SRC_CLI_COMMANDS = $(wildcard $(SRCDIR)/cli/commands/*.c)
 SRC_CORE = $(wildcard $(SRCDIR)/core/*.c)
 SRC_DATASET = $(wildcard $(SRCDIR)/dataset/*.c)
 SRC_IMAGE = $(wildcard $(SRCDIR)/image/*.c)
-SRC_UTILS = $(SRCDIR)/Utils.c
+SRC_UTILS = $(wildcard $(SRCDIR)/utils/*.c)
 SRC_DATA = $(IODIR)/MemoryDatasets.c
 
 # Object files with directory structure preserved
@@ -41,7 +41,7 @@ OBJ_CLI_COMMANDS = $(patsubst $(SRCDIR)/cli/commands/%.c, $(OBJDIR)/cli/commands
 OBJ_CORE = $(patsubst $(SRCDIR)/core/%.c, $(OBJDIR)/core/%.o, $(SRC_CORE))
 OBJ_DATASET = $(patsubst $(SRCDIR)/dataset/%.c, $(OBJDIR)/dataset/%.o, $(SRC_DATASET))
 OBJ_IMAGE = $(patsubst $(SRCDIR)/image/%.c, $(OBJDIR)/image/%.o, $(SRC_IMAGE))
-OBJ_UTILS = $(OBJDIR)/Utils.o
+OBJ_UTILS = $(patsubst $(SRCDIR)/utils/%.c, $(OBJDIR)/utils/%.o, $(SRC_UTILS))
 OBJ_DATA = $(OBJDIR)/MemoryDatasets.o
 
 OBJ_ALL = $(OBJ_ROOT) $(OBJ_CLI) $(OBJ_CLI_COMMANDS) $(OBJ_CORE) $(OBJ_DATASET) $(OBJ_IMAGE) $(OBJ_UTILS) $(OBJ_DATA)
@@ -60,6 +60,7 @@ $(OBJDIR):
 	mkdir -p $(OBJDIR)/core
 	mkdir -p $(OBJDIR)/dataset
 	mkdir -p $(OBJDIR)/image
+	mkdir -p $(OBJDIR)/utils
 
 # Compile root source file
 $(OBJDIR)/miniAI.o: miniAI.c | $(OBJDIR)
@@ -86,7 +87,7 @@ $(OBJDIR)/image/%.o: $(SRCDIR)/image/%.c | $(OBJDIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Compile utils
-$(OBJDIR)/Utils.o: $(SRCDIR)/Utils.c | $(OBJDIR)
+$(OBJDIR)/utils/%.o: $(SRCDIR)/utils/%.c | $(OBJDIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Compile data files
@@ -215,7 +216,7 @@ structure:
 	@echo "    core/         - Core neural network (Arena, Tensor, Model, etc)"
 	@echo "    dataset/      - Dataset management and test utilities"
 	@echo "    image/        - Image loading and preprocessing"
-	@echo "    Utils.c       - General utilities"
+	@echo "    utils/        - General utilities"
 	@echo "  IO/"
 	@echo "    MemoryDatasets.c - Static in-memory datasets"
 	@echo "    images/       - PNG datasets"
