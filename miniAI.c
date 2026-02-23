@@ -3,7 +3,7 @@
 #include "headers/cli/Commands.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <headers/utils/Random.h>
+#include "headers/utils/Random.h"
 
 // Global training configuration
 TrainingConfig g_trainConfig;
