@@ -43,9 +43,3 @@ jobs:
       uses: github/codeql-action/analyze@v3
       with:
         category: "/language:c-cpp"
-    
-    - name: Upload SARIF results
-      if: always()
-      uses: github/codeql-action/upload-sarif@v3
-      with:
-        sarif_file: ../results/c-cpp.sarif
