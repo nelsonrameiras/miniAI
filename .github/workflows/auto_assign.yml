@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Auto-assign to maintainer
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const isIssue = context.payload.issue != null;
