@@ -7,6 +7,27 @@
 
 **miniAI** is an educational implementation of an artificial neural network built entirely from scratch in pure C, with no external machine learning library dependencies. The project demonstrates the fundamentals of deep learning through a complete feed-forward architecture, including forward propagation, backpropagation, L2 regularization, gradient clipping, and hyperparameter optimization.
 
+## Table of Contents
+
+- [Key Features](#key-features)
+- [Project Structure](#project-structure)
+- [Compilation](#compilation)
+- [Static vs PNG Datasets](#Static-vs-PNG-Datasets)
+- [Usage](#usage)
+- [Command reference](#command-reference)
+- [Technical Architecture](#technical-architecture)
+- [Hyperparameter Configuration](#hyperparameter-configuration)
+- [Implementation Details](#implementation-details)
+- [Debugging and Troubleshooting](#Debugging-and-Troubleshooting)
+- [Educational Concepts](#Educational-Concepts)
+- [Possible Extensions](#Possible-Extensions)
+- [References and Resources](#References-and-Resources)
+- [Technical Notes](#Technical-Notes)
+- [Contributing](#Contributing)
+- [License](#License)
+- [Author](#Author)
+- [Acknowledgments](#Acknowledgments)
+
 ## Key Features
 
 ### Neural Network Architecture
