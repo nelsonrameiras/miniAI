@@ -34,7 +34,7 @@ jobs:
         git diff origin/main...HEAD -- '*.c' '*.h' | grep -q "^-.*function\|^-.*typedef" && {
           echo "Potential breaking changes detected"
           echo "::warning::This PR may contain breaking changes. Please update CHANGELOG."
-        } || echo "✓ No obvious breaking changes"
+        } || echo "No obvious breaking changes"
       continue-on-error: true
     
     - name: Check for new files

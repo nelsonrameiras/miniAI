@@ -33,8 +33,11 @@ jobs:
               });
               
               const guidance = isIssue
-                ? `**For bugs:** Steps to reproduce, expected vs actual behavior, environment.\n**For features:** Use case, motivation, proposed solution.`
-                : `**What:** Brief description of changes.\n**Why:** Motivation for this change.\n**Breaking changes:** Any side effects?`;
+                ? `**For bugs:** Steps to reproduce, expected vs actual behavior, environment.
+                **For features:** Use case, motivation, proposed solution.`
+                : `**What:** Brief description of changes.
+                **Why:** Motivation for this change.
+                **Breaking changes:** Any side effects?`;
                         
               await github.rest.issues.createComment({
                 owner: context.repo.owner,

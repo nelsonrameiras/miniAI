@@ -1,0 +1,37 @@
+# miniAI Code Owners
+# Defines who should review specific parts of the codebase
+
+# I will add your feature/contribution here, and you will become the Code Owner of that.
+
+# Core ML engine - neural network implementation
+/src/core/              @nelsonramosua
+/headers/core/          @nelsonramosua
+/AIHeader.h             @nelsonramosua
+
+# Command-line interface
+/src/cli/               @nelsonramosua
+/headers/cli/           @nelsonramosua
+/miniAI.c               @nelsonramosua
+
+# Dataset management and testing
+/src/dataset/           @nelsonramosua
+/headers/dataset/       @nelsonramosua
+/IO/MemoryDatasets.c    @nelsonramosua
+/IO/MemoryDatasets.h    @nelsonramosua
+
+# Image processing pipeline
+/src/image/             @nelsonramosua
+/headers/image/         @nelsonramosua
+
+# CI/CD and infrastructure
+/.github/workflows/     @nelsonramosua
+/Dockerfile             @nelsonramosua
+/Makefile               @nelsonramosua
+
+# Documentation
+/docs/                  @nelsonramosua
+/README.md              @nelsonramosua
+/CONTRIBUTING.md        @nelsonramosua
+
+# Default owner for everything else
+*                       @nelsonramosua

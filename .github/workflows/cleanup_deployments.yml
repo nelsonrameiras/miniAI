@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   cleanup:
-    name: Cleanup Old Deployments (Safe)
+    name: Cleanup Old Deployments
     runs-on: ubuntu-latest
     
     steps:
@@ -94,4 +94,4 @@ jobs:
         echo "**Active deployments preserved**" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "Only inactive/failed deployments were deleted." >> $GITHUB_STEP_SUMMARY
-        echo "Your GitHub Pages site is still live!" >> $GITHUB_STEP_SUMMARY
+        echo "GitHub Pages site is still live!" >> $GITHUB_STEP_SUMMARY

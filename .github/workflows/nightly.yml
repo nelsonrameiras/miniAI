@@ -142,7 +142,7 @@ jobs:
     - name: Check for leaks
       run: |
         if grep -q "definitely lost: 0 bytes" valgrind.log; then
-          echo "✓ No memory leaks detected"
+          echo "No memory leaks detected"
         else
           echo "Potential memory leaks detected"
           cat valgrind.log
