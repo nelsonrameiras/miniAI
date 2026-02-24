@@ -23,12 +23,16 @@ jobs:
             const type = isIssue ? 'issue' : 'pull request';
             
             try {
-              await github.rest.issues.addAssignees({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: number,
-                assignees: ['nelsonramosua']
-              });
+              const prAuthor = context.payload.pull_request?.user?.login ?? context.payload.issue?.user?.login;
+
+              if (context.payload.issue != null || prAuthor === 'nelsonramosua') {
+                await github.rest.issues.addAssignees({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: number,
+                  assignees: ['nelsonramosua']
+                });
+              }
               
               console.log(`Auto-assigned ${type} #${number} to @nelsonramosua`);
             } catch (error) {
