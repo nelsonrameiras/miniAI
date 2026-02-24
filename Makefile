@@ -268,8 +268,11 @@ help:
 	@echo "  ./miniAI recognize --model IO/models/alpha_brain_png.bin --image phrase.png"
 	@echo ""
 
-.PHONY: all clean clean-models clean-configs clean-all rebuild run train \\
-	train-digits train-png test test-static test-png test-image benchmark \\
-	benchmark-png recognize recognize-phrase structure loc help
+.PHONY: all clean clean-models clean-configs clean-all rebuild run \\
+	train train-static-digits train-static train-png train-png-digits \\ 
+	test test-static test-static-digits test-png test-png-digits test-image test-image-digits \\
+	benchmark benchmark-static benchmark-static-digits benchmark-png benchmark-png-digits \\
+	recognize recognize-phrase \\
+	structure loc help
 
 -include $(OBJ_ALL:.o=.d)

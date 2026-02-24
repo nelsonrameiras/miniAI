@@ -17,8 +17,6 @@ updates:
     commit-message:
       prefix: "ci"
       include: "scope"
-    reviewers:
-      - "nelsonramosua"
     
   # Docker updates (if using Dockerfile)
   - package-ecosystem: "docker"

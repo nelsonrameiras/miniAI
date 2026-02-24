@@ -2,9 +2,11 @@ name: Welcome New Contributors
 
 on:
   issues:
-    types: [opened]
+    types: 
+      - opened
   pull_request:
-    types: [opened]
+    types: 
+      - opened
 
 permissions:
   issues: write
@@ -12,7 +14,9 @@ permissions:
 
 jobs:
   welcome:
+    name: Welcome First-Time Contributors
     runs-on: ubuntu-latest
+    
     steps:
       - uses: actions/first-interaction@v3.1.0
         with:

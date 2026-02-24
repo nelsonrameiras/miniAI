@@ -2,7 +2,7 @@
 # Multi-stage build for minimal final image
 
 # Stage 1: Build
-FROM gcc:latest AS builder
+FROM gcc:14 AS builder
 
 WORKDIR /build
 

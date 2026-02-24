@@ -156,7 +156,7 @@ int cmdRecognize(CommandArgs args) {
         if (ds->phrase.sequence->chars[i] == NULL) {
             printf("%3d |      | (space)\n", i);
         } else {
-            printf("%3d |  %c   |   %.2f%%\n", i, phrase[i == 0 ? 0 : i], confidences[i] * 100);
+            printf("%3d |  %c   |   %.2f%%\n", i, phrase[i], confidences[i] * 100);
         }
     }
     

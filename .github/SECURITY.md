@@ -96,7 +96,7 @@ When using miniAI:
 
 **Memory safety:**
 - Arena allocator with bounds checking.
-- No dynamic allocation after initialization.
+- No dynamic allocation after initialization (except on image processing pipeline).
 - Valgrind should be clean (no leaks, no undefined behavior).
 
 **Input validation:**

@@ -179,9 +179,9 @@ for (int i = 0; i < n; i++) {
 
 // For simple nested conditional/iterative structures, you can condense into one line
 for (int a = 0; a < n; a++) {
-    for (int b = 0; b < n; a++) {
+    for (int b = 0; b < n; b++) {
         if (a < 20) process(a); 
-        for (c = b + 1; b < n) process(c);
+        for (int c = b + 1; b < n) process(c);
     }
 }
 

@@ -279,7 +279,8 @@ BenchmarkResult runSingleExperiment(int hiddenSize, float lr, Dataset *ds,
             Tensor *input = tensorAlloc(scratch, ds->inputSize, 1);
             memcpy(input->data, sample, ds->inputSize * sizeof(float));
             for(int n = 0; n < STRESS_NOISE; n++) {
-                input->data[rand() % ds->inputSize] = 1.0f - input->data[rand() % ds->inputSize];
+                int idx = rand() % ds->inputSize;
+                input->data[idx] = 1.0f - input->data[idx];  // flip of the same pixel
             }
             
             if (gluePredict(model, input, scratch, NULL) == label) {
