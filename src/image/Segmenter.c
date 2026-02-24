@@ -81,9 +81,15 @@ static CharBounds* findCharBoundaries(int *projection, int width, int minCharWid
                     // valid character
                     if (count >= capacity) {
                         capacity *= 2;
-                        bounds = realloc(bounds, capacity * sizeof(CharBounds));
-                        gaps = realloc(gaps, capacity * sizeof(int));
-                        if (!bounds || !gaps) { free(bounds); free(gaps); return NULL; }
+                        CharBounds *newBounds = realloc(bounds, capacity * sizeof(CharBounds));
+                        int *newGaps = realloc(gaps, capacity * sizeof(int));
+                        if (!newBounds || !newGaps) {
+                            free(newBounds ? newBounds : bounds);
+                            free(newGaps   ? newGaps   : gaps);
+                            return NULL;
+                        }
+                        bounds = newBounds;
+                        gaps   = newGaps;
                     }
                     bounds[count].left = charStart;
                     bounds[count].right = x - 1;
@@ -102,8 +108,15 @@ static CharBounds* findCharBoundaries(int *projection, int width, int minCharWid
         if (charWidth >= minCharWidth) {
             if (count >= capacity) {
                 capacity *= 2;
-                bounds = realloc(bounds, capacity * sizeof(CharBounds));
-                gaps = realloc(gaps, capacity * sizeof(int));
+                CharBounds *newBounds = realloc(bounds, capacity * sizeof(CharBounds));
+                int *newGaps = realloc(gaps, capacity * sizeof(int));
+                if (!newBounds || !newGaps) {
+                    free(newBounds ? newBounds : bounds);
+                    free(newGaps   ? newGaps   : gaps);
+                    return NULL;
+                }
+                bounds = newBounds;
+                gaps   = newGaps;
             }
             bounds[count].left = charStart;
             bounds[count].right = width - 1;
