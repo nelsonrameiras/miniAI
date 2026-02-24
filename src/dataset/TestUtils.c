@@ -262,7 +262,7 @@ BenchmarkResult runSingleExperiment(int hiddenSize, float lr, Dataset *ds,
                     }
                 }
             }
-            if (pass > 0 && pass % (DECAY_STEP / ds->outputSize) == 0) {
+            if (pass > 0 && pass % DECAY_STEP == 0) {
                 learningRate *= DECAY_RATE;
             }
         }
