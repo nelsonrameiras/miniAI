@@ -32,7 +32,7 @@ jobs:
           
           # Messages
           stale-issue-message: |
-            This issue has been automatically marked as stale because it has been inactive for pver 45 days.
+            This issue has been automatically marked as stale because it has been inactive for over 60 days.
             
             **To keep it open:**
             - Add a comment with updates or context.

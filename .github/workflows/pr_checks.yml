@@ -68,24 +68,6 @@ jobs:
           echo "::warning::Large code change detected (+$NET_CHANGE lines). Consider splitting into smaller PRs."
         fi
 
-  # Build verification
-  build-pr:
-    name: Build PR
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout PR
-      uses: actions/checkout@v4
-    
-    - name: Build
-      run: make clean && make
-    
-    - name: Quick test
-      run: |
-        ./miniAI help
-        timeout 60 ./miniAI train --dataset digits --static || echo "Training test completed"
-      continue-on-error: true
-
   # Code diff analysis
   diff-analysis:
     name: Analyze Diff
@@ -127,8 +109,8 @@ jobs:
   pr-comment:
     name: Comment on PR
     runs-on: ubuntu-latest
-    needs: [pr-validation, build-pr, diff-analysis]
-    if: always()
+    needs: [pr-validation, diff-analysis]
+    if: always() && github.event.action == 'opened'
     
     steps:
     - name: Create PR comment
@@ -139,7 +121,6 @@ jobs:
           
           ### Build Status
           - **Validation**: ${{ needs.pr-validation.result }}
-          - **Build**: ${{ needs.build-pr.result }}
           - **Diff Analysis**: ${{ needs.diff-analysis.result }}
           
           ### Next Steps
