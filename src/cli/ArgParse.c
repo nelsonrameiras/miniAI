@@ -1,10 +1,11 @@
 #include "../../headers/cli/ArgParse.h"
+#include "../../AIHeader.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 void printUsage(const char *progName) {
-    printf("miniAI - Neural Network Training and Recognition Tool\n\n");
+    printf("miniAI %s - Neural Network Training and Recognition Tool\n\n", MINIAI_VERSION);
     printf("Usage: %s <command> [options]\n\n", progName);
     
     printf("Commands:\n");
@@ -12,7 +13,8 @@ void printUsage(const char *progName) {
     printf("  test       Test an existing model (on dataset or specific image)\n");
     printf("  benchmark  Run hyperparameter optimization\n");
     printf("  recognize  Recognize characters/phrases in images\n");
-    printf("  help       Show this help message\n\n");
+    printf("  help       Show this help message\n");
+    printf("  version    Show version information\n\n");
     
     printf("Options:\n");
     printf("  --dataset <type>    Dataset type: digits, alpha (default: alpha)\n");
@@ -23,7 +25,9 @@ void printUsage(const char *progName) {
     printf("  --grid <size>       Grid size: 8 or 16 (default: auto)\n");
     printf("  --reps <n>          Benchmark repetitions (default: 3)\n");
     printf("  --load              Load existing model instead of training\n");
-    printf("  --verbose           Verbose output\n\n");
+    printf("  --resume            Load existing model and continue training\n");
+    printf("  --seed <n>          Fixed random seed for reproducibility (default: random)\n");
+    printf("  --verbose           Verbose output (loss every pass, extra detail)\n\n");
     
     printf("Dataset Types:\n");
     printf("  Static (--static):  In-memory arrays, faster training\n");
@@ -115,8 +119,10 @@ CommandArgs parseArgs(int argc, char **argv) {
         .gridSize = 0,
         .benchmarkReps = 3,
         .loadModel = 0,
+        .resumeModel = 0,
         .useStatic = -1,  // -1 = not specified, will be determined later
-        .verbose = 0
+        .verbose = 0,
+        .seed = 0
     };
     
     if (argc < 2) {
@@ -136,6 +142,9 @@ CommandArgs parseArgs(int argc, char **argv) {
         args.command = CMD_RECOGNIZE;
     } else if (strcmp(cmd, "help") == 0 || strcmp(cmd, "--help") == 0 || strcmp(cmd, "-h") == 0) {
         args.command = CMD_HELP;
+        return args;
+    } else if (strcmp(cmd, "version") == 0 || strcmp(cmd, "--version") == 0 || strcmp(cmd, "-v") == 0 || strcmp(cmd, "-V") == 0) {
+        args.command = CMD_VERSION;
         return args;
     } else {
         args.command = CMD_INVALID;
@@ -178,6 +187,10 @@ CommandArgs parseArgs(int argc, char **argv) {
             args.benchmarkReps = atoi(argv[++i]); i++;
         } else if (strcmp(argv[i], "--load") == 0) {
             args.loadModel = 1; i++;
+        } else if (strcmp(argv[i], "--resume") == 0) {
+            args.resumeModel = 1; i++;
+        } else if (strcmp(argv[i], "--seed") == 0 && i + 1 < argc) {
+            args.seed = atoi(argv[++i]); i++;
         } else if (strcmp(argv[i], "--verbose") == 0 || strcmp(argv[i], "-v") == 0) {
             args.verbose = 1; i++;
         } else if (strcmp(argv[i], "digits") == 0) {

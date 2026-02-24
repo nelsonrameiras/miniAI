@@ -89,6 +89,10 @@ jobs:
         $CMD 120 ./miniAI train --dataset digits --static || echo "Training test completed or timed out"
       continue-on-error: true
     
+    - name: Run unit tests
+      run: |
+        make unit-tests
+    
     - name: Check model was created
       run: |
         if [ -f "IO/models/digit_brain.bin" ]; then

@@ -1,6 +1,9 @@
 #ifndef AI_HEADER_H
 #define AI_HEADER_H
 
+// --- Project Version ---
+#define MINIAI_VERSION "0.1.0"
+
 // --- Network Architecture Defaults ---
 #define DEFAULT_HIDDEN  512     // default hidden layer neurons
 
@@ -34,6 +37,8 @@ typedef struct {
     int   hiddenSize;
     float learningRate;
     int   benchmarkReps;
+    int   verbose;      // 0 = normal output, 1 = verbose (loss every pass, etc.)
+    int   seed;         // 0 = random seed, >0 = fixed seed for reproducibility
 } TrainingConfig;
 
 // Global training config instance (replaces individual globals)
@@ -44,7 +49,9 @@ static inline TrainingConfig defaultTrainingConfig(void) {
     return (TrainingConfig){
         .hiddenSize = DEFAULT_HIDDEN,
         .learningRate = DEFAULT_LR,
-        .benchmarkReps = BENCHMARK_REPETITIONS
+        .benchmarkReps = BENCHMARK_REPETITIONS,
+        .verbose = 0,
+        .seed = 0
     };
 }
 

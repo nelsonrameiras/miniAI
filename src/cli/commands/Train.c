@@ -101,8 +101,18 @@ int cmdTrain(CommandArgs args) {
     printf("Learning rate: %.4f\n", g_trainConfig.learningRate);
     printf("Regularization: %.6f\n\n", LAMBDA);
     
-    // Train or load
-    if (args.loadModel) {
+    // Train, resume, or load
+    if (args.resumeModel) {
+        printf("Resuming training from %s\n\n", args.modelFile);
+        if (modelLoad(model, args.modelFile) != 0) {
+            fprintf(stderr, "Error: Could not load model for resuming\n");
+            datasetFree(ds);
+            arenaFree(perm);
+            arenaFree(scratch);
+            return 1;
+        }
+        trainModel(model, ds, scratch);
+    } else if (args.loadModel) {
         printf("Loading existing model from %s\n\n", args.modelFile);
         if (modelLoad(model, args.modelFile) != 0) {
             fprintf(stderr, "Error: Could not load model\n");

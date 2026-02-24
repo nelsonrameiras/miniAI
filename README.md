@@ -16,6 +16,7 @@
 - [Usage](#usage)
 - [Command reference](#command-reference)
 - [Technical Architecture](#technical-architecture)
+- [Unit Tests](#unit-tests)
 - [Hyperparameter Configuration](#hyperparameter-configuration)
 - [Implementation Details](#implementation-details)
 - [Debugging and Troubleshooting](#Debugging-and-Troubleshooting)
@@ -118,7 +119,10 @@ miniAI/
 │   │   ├── ImageLoader.h      # PNG image loading
 │   │   ├── ImagePreprocess.h  # Image preprocessing
 │   │   └── Segmenter.h        # Character segmentation
+│   ├── tests/                 # Unit test declarations
+│   │   └── Tests.h            # Test suite interface
 │   └── utils/                 # Utilities
+│       ├── Random.h           # Random seed utilities
 │       └── Utils.h            # Helper functions
 │
 ├── src/                       # Implementations (mirrors headers/)
@@ -143,7 +147,12 @@ miniAI/
 │   │   ├── ImageLoader.c      # PNG loader
 │   │   ├── ImagePreprocess.c  # Preprocessing
 │   │   └── Segmenter.c        # Character segmentation
-│   └── Utils.c                # Utility functions
+│   ├── tests/                 # Unit test implementations
+│   │   ├── Tests.c            # Full test suite (Arena, Tensor, Grad, Shuffle, Model, Glue, ImagePreprocess)
+│   │   └── TestConfig.c       # g_trainConfig definition for test binary
+│   └── utils/                 # Utility implementations
+│       ├── Random.c           # Random seed
+│       └── Utils.c            # Shuffle, printDigit
 │
 ├── IO/                        # Input/Output and data
 │   ├── MemoryDatasets.c       # Static in-memory datasets
@@ -219,11 +228,14 @@ make help
 ### Quick Start Examples
 
 ```bash
-# Train with static dataset (fast, 5×5)
-make train-digits
+# Train with static dataset (fast, 5×5 digits)
+make train-static-digits
 
-# Train with PNG dataset (more realistic, 8×8)
+# Train with PNG dataset (more realistic, 8×8 digits)
 make train-png-digits
+
+# Resume training from a saved model
+make train-resume-digits
 
 # Test static model
 make test-static
@@ -232,7 +244,13 @@ make test-static
 make test-png
 
 # Run benchmark
-make benchmark
+make benchmark-static
+
+# Run unit tests
+make unit-tests
+
+# Show version
+make version
 ```
 
 ## Static vs PNG Datasets
@@ -544,7 +562,9 @@ docker run --rm nelsonramosua/miniai help
 --grid <size>       Grid size: 5, 8, or 16 (default: auto)
 --reps <n>          Benchmark repetitions (default: 3)
 --load              Load existing model instead of training
---verbose           Verbose output
+--resume            Load existing model and continue training
+--seed <n>          Fixed random seed for reproducibility (default: random)
+--verbose, -v       Verbose output (loss every 100 passes, hyperparameter summary)
 ```
 
 ### Commands
@@ -587,6 +607,36 @@ Show help message.
 ```bash
 ./miniAI help
 ```
+
+#### version
+Show version string (also available as `--version` or `-V`).
+
+```bash
+./miniAI version
+./miniAI --version
+```
+
+## Unit Tests
+
+miniAI includes a standalone unit test binary that verifies the correctness of all core components in isolation.
+
+```bash
+make unit-tests
+```
+
+The suite currently covers **7 modules** with over 120 individual assertions:
+
+| Suite | What is tested |
+|---|---|
+| **Arena** | Init, 8-byte alignment, zero-init, overflow protection, reset, two independent arenas |
+| **Tensor** | `tensorDot` (known values, identity matrix), `tensorAdd` (commutativity), `tensorSigmoid` (symmetry, monotonicity), `tensorSoftmax` (sum=1, ordering, uniform input, numeric stability), `tensorReLU`, `tensorFillXavier` (range, mean, variance) |
+| **Grad** | `sigmoidDerivative` (value at 0, saturation, symmetry, non-negativity, peak), `tensorSigmoidPrime` (element-wise match), `tensorReLUDerivative` (threshold at 0, upstream scaling) |
+| **Shuffle** | Element integrity, no duplicates, length-0/1 edge cases, statistical non-identity |
+| **Model** | Layer shape and count, zero-initialised gradients, Xavier weights, save/load bit-identical round-trip, architecture mismatch detection, missing file detection |
+| **Glue** | Forward pass shape and finiteness, `gluePredict` valid index and confidence range, `glueComputeLoss` positive and finite, backprop direction (loss decreases), convergence to correct label, correct-label loss < wrong-label loss, numeric stability across 10 random trials |
+| **ImagePreprocess** | `rgbToGray` ITU-R 601 coefficients (red≈76, green≈149, blue≈29), channel ordering, monotonicity; `calculateOtsuThreshold` bimodal, uniform, two-cluster, binary inputs |
+
+The test binary compiles only core, image, and utility objects — it never links dataset, CLI, or `miniAI.o`. This guarantees no accidental contamination between the test binary and the main executable.
 
 ## Technical Architecture
 
@@ -774,6 +824,8 @@ typedef struct {
     int   hiddenSize;       // Hidden layer size.
     float learningRate;     // Learning rate.
     int   benchmarkReps;    // Benchmark repetitions.
+    int   verbose;          // 0 = normal output, 1 = loss every 100 passes.
+    int   seed;             // 0 = random seed, >0 = fixed reproducible seed.
 } TrainingConfig;
 ```
 
@@ -1184,4 +1236,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-*For questions, suggestions or bugs, please open an [issue](https://github.com/nelsonramosua/miniAI/issues).* 
+*For questions, suggestions or bugs, please open an [issue](https://github.com/nelsonramosua/miniAI/issues).*

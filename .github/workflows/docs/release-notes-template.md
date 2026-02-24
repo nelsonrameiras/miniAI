@@ -1,6 +1,6 @@
 ## What's New
 
-This release includes the latest improvements to miniAI.
+See [CHANGELOG.md](https://github.com/nelsonramosua/miniAI/blob/main/CHANGELOG.md) for the full list of changes in this release.
 
 ## Features
 

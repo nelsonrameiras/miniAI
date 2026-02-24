@@ -16,6 +16,10 @@ extern TrainingConfig g_trainConfig;
 
 void trainModel(Model *model, Dataset *ds, Arena *scratch) {
     printf("--- TRAINING PHASE (%s) ---\n", ds->name);
+    if (g_trainConfig.verbose)
+        printf("[verbose] %d passes, batch=%d, initial LR=%.4f, decay every %d passes (x%.1f)\n\n",
+               TOTAL_PASSES, BATCH_SIZE, g_trainConfig.learningRate, DECAY_STEP, DECAY_RATE);
+
     float lr = g_trainConfig.learningRate;
     
     int *indices = (int*)malloc(ds->outputSize * sizeof(int));
@@ -52,7 +56,7 @@ void trainModel(Model *model, Dataset *ds, Arena *scratch) {
         if (pass > 0 && pass % (DECAY_STEP ) == 0) {
             lr *= DECAY_RATE;
             
-            // Compute diagnostic loss
+            // Compute diagnostic loss on a random sample
             arenaReset(scratch);
             int testIdx = rand() % ds->outputSize;
             Tensor *input = tensorAlloc(scratch, ds->inputSize, 1);
@@ -63,6 +67,19 @@ void trainModel(Model *model, Dataset *ds, Arena *scratch) {
                 Tensor *output = glueForward(model, input, scratch);
                 float loss = glueComputeLoss(output, testIdx, scratch);
                 printf("Pass %d | Loss: %.6f | LR: %f\n", pass, loss, lr);
+            }
+        } else if (g_trainConfig.verbose && pass % 100 == 0 && pass > 0) {
+            // Verbose: loss every 100 passes (between the decay-step prints)
+            arenaReset(scratch);
+            int testIdx = rand() % ds->outputSize;
+            Tensor *input = tensorAlloc(scratch, ds->inputSize, 1);
+            
+            float *sample = datasetGetSample(ds, testIdx);
+            if (sample) {
+                memcpy(input->data, sample, ds->inputSize * sizeof(float));
+                Tensor *output = glueForward(model, input, scratch);
+                float loss = glueComputeLoss(output, testIdx, scratch);
+                printf("Pass %d/%d | Loss: %.6f | LR: %.6f\n", pass, TOTAL_PASSES, loss, lr);
             }
         }
     }

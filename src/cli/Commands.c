@@ -1,5 +1,6 @@
 #include "../../headers/cli/Commands.h"
 #include "../../headers/cli/ArgParse.h"
+#include "../../AIHeader.h"
 #include <stdio.h>
 
 int executeCommand(CommandArgs args) {
@@ -18,6 +19,10 @@ int executeCommand(CommandArgs args) {
             
         case CMD_HELP:
             printUsage("miniAI");
+            return 0;
+
+        case CMD_VERSION:
+            printf("miniAI %s\n", MINIAI_VERSION);
             return 0;
             
         case CMD_INVALID:

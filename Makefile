@@ -34,6 +34,10 @@ SRC_IMAGE = $(wildcard $(SRCDIR)/image/*.c)
 SRC_UTILS = $(wildcard $(SRCDIR)/utils/*.c)
 SRC_DATA = $(IODIR)/MemoryDatasets.c
 
+# Test sources - listed explicitly for the unit-tests target only.
+# They are NEVER compiled as part of OBJ_ALL.
+TEST_SRCS = $(SRCDIR)/tests/Tests.c $(SRCDIR)/tests/UnitTestsConfig.c
+
 # Object files with directory structure preserved
 OBJ_ROOT = $(OBJDIR)/miniAI.o
 OBJ_CLI = $(patsubst $(SRCDIR)/cli/%.c, $(OBJDIR)/cli/%.o, $(SRC_CLI))
@@ -48,6 +52,7 @@ OBJ_ALL = $(OBJ_ROOT) $(OBJ_CLI) $(OBJ_CLI_COMMANDS) $(OBJ_CORE) $(OBJ_DATASET) 
 
 # Executables
 TARGET = miniAI
+TARGET_TESTS = miniAI_tests
 
 # Default target
 all: $(OBJDIR) $(TARGET)
@@ -61,6 +66,7 @@ $(OBJDIR):
 	mkdir -p $(OBJDIR)/dataset
 	mkdir -p $(OBJDIR)/image
 	mkdir -p $(OBJDIR)/utils
+	mkdir -p $(OBJDIR)/tests
 
 # Compile root source file
 $(OBJDIR)/miniAI.o: miniAI.c | $(OBJDIR)
@@ -103,9 +109,22 @@ $(TARGET): $(OBJ_ALL)
 	@echo "========================================"
 	@echo ""
 
+# Build and run unit test binary
+# Test sources are compiled directly in a single command.
+unit-tests: $(OBJ_CORE) $(OBJ_IMAGE) $(OBJ_UTILS) | $(OBJDIR)
+	@echo "Compiling and linking test binary..."
+	$(CC) $(CFLAGS) $(TEST_SRCS) $(OBJ_CORE) $(OBJ_IMAGE) $(OBJ_UTILS) \
+		-o $(TARGET_TESTS) $(LDFLAGS) $(LIBS)
+	@echo ""
+	@./$(TARGET_TESTS)
+	@echo ""
+
 # Run shortcuts
 run: $(TARGET)
 	@./$(TARGET) help
+
+version: $(TARGET)
+	@./$(TARGET) version
 
 train: $(TARGET)
 	@echo "Usage examples:"
@@ -113,6 +132,8 @@ train: $(TARGET)
 	@echo "  make train-static-digits   - Train static digits model on static digits dataset"
 	@echo "  make train-png       		- Train PNG alpha model on PNG alpha dataset"
 	@echo "  make train-png-digits     	- Train PNG digits model on PNG digits dataset"
+	@echo "  	# with any variation, pass resume to resume training. Pex:"
+	@echo "	 make train-resume-static   - Resume training on alpha model on static alpha dataset"
 
 train-static: $(TARGET)
 	@./$(TARGET) train --dataset alpha --static
@@ -125,6 +146,18 @@ train-png: $(TARGET)
 
 train-png-digits: $(TARGET)
 	@./$(TARGET) train --dataset digits --data
+
+train-resume-static: $(TARGET)
+	@./$(TARGET) train --dataset alpha --static --resume
+
+train-resume-static-digits: $(TARGET)
+	@./$(TARGET) train --dataset digits --static --resume
+
+train-resume-png: $(TARGET)
+	@./$(TARGET) train --data --resume
+
+train-resume-png-digits: $(TARGET)
+	@./$(TARGET) train --dataset digits --data --resume
 
 test: $(TARGET)
 	@echo "Usage examples:"
@@ -190,7 +223,7 @@ recognize-phrase: $(TARGET)
 # Clean
 clean:
 	rm -rf $(OBJDIR)
-	rm -f $(TARGET)
+	rm -f $(TARGET) $(TARGET_TESTS) $(TARGET_TESTS).d
 
 # Clean models only
 clean-models:
@@ -217,6 +250,7 @@ structure:
 	@echo "    dataset/      - Dataset management and test utilities"
 	@echo "    image/        - Image loading and preprocessing"
 	@echo "    utils/        - General utilities"
+	@echo "    tests/        - Unit tests"
 	@echo "  IO/"
 	@echo "    MemoryDatasets.c - Static in-memory datasets"
 	@echo "    images/       - PNG datasets"
@@ -240,25 +274,40 @@ help:
 	@echo "  clean-all        - Remove everything (build + models + configs)"
 	@echo "  rebuild          - Clean and rebuild"
 	@echo ""
+	@echo ""
 	@echo "Run shortcuts:"
-	@echo "  make run         			- Show help"
-	@echo "  make train-static       	- Train alpha (static)"
-	@echo "  make train-static-digits	- Train digits (static)"
-	@echo "  make train-png   			- Train alpha (PNG)"
-	@echo "  make train-png-digits  	- Train digits (PNG)"
-	@echo "  make test-static 			- Test alpha model (static)"
-	@echo "  make test-static-digits	- Test digits model (static)"
-	@echo "  make test-png    			- Test alpha model (PNG)"
-	@echo "  make test-png-digits    	- Test PNG digits model (PNG)"
-	@echo "  make benchmark-static   	- Benchmark alpha dataset (static)"
-	@echo "  make benchmark-static-digits - Benchmark digits dataset (static)"
-	@echo "  make benchmark-png			- Benchmark alpha dataset (PNG)"
-	@echo "  make benchmark-png-digits	- Benchmark digits dataset (PNG)"
+
+	@echo "  make unit-tests          		- Build and run unit tests"
+	@echo ""
+	@echo "  make run         				- Show help"
+	@echo ""
+	@echo "  make train-static       		- Train alpha (static)"
+	@echo "  make train-static-digits		- Train digits (static)"
+	@echo "  make train-png   				- Train alpha (PNG)"
+	@echo "  make train-png-digits  		- Train digits (PNG)"
+	@echo "  make train-resume-static   		- Resume alpha training (static)"
+	@echo "  make train-resume-static-digits	- Resume digits training (static)"
+	@echo "  make train-resume-png	   			- Resume alpha training (png)"
+	@echo "  make train-resume-png-digits		- Resume digits training (png)"
+	@echo ""
+	@echo "  make test-static 					- Test alpha model (static)"
+	@echo "  make test-static-digits			- Test digits model (static)"
+	@echo "  make test-png    					- Test alpha model (PNG)"
+	@echo "  make test-png-digits    			- Test digits model (PNG)"
+	@echo "  make test-image IMG=test.png      	- Test image with PNG alpha model"
+	@echo "  make test-image-digits IMG=img.png - test image with PNG digits model"
+	@echo ""
+	@echo "  make benchmark-static   		- Benchmark alpha dataset (static)"
+	@echo "  make benchmark-static-digits 	- Benchmark digits dataset (static)"
+	@echo "  make benchmark-png				- Benchmark alpha dataset (PNG)"
+	@echo "  make benchmark-png-digits		- Benchmark digits dataset (PNG)"
+	@echo ""
 	@echo ""
 	@echo "Info targets:"
 	@echo "  make structure   - Show directory structure"
 	@echo "  make loc         - Count lines of code"
 	@echo "  make help        - Show help"
+	@echo ""
 	@echo ""
 	@echo "Direct usage:"
 	@echo "  ./miniAI train --dataset digits --static"
@@ -268,10 +317,11 @@ help:
 	@echo "  ./miniAI recognize --model IO/models/alpha_brain_png.bin --image phrase.png"
 	@echo ""
 
-.PHONY: all clean clean-models clean-configs clean-all rebuild run \\
-	train train-static-digits train-static train-png train-png-digits \\ 
-	test test-static test-static-digits test-png test-png-digits test-image test-image-digits \\
-	benchmark benchmark-static benchmark-static-digits benchmark-png benchmark-png-digits \\
+.PHONY: all clean clean-models clean-configs clean-all rebuild run unit-tests version \
+	train train-static-digits train-static train-png train-png-digits \
+	train-resume-static train-resume-static-digits train-resume-png train-resume-png-digits \
+	test test-static test-static-digits test-png test-png-digits test-image test-image-digits \
+	benchmark benchmark-static benchmark-static-digits benchmark-png benchmark-png-digits \
 	recognize recognize-phrase \\
 	structure loc help
 

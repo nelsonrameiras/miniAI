@@ -80,6 +80,9 @@ jobs:
     
     - name: Run comprehensive tests
       run: |
+        # Unit tests first
+        make unit-tests
+        
         # Train all model types
         ./miniAI train --dataset digits --static
         ./miniAI train --dataset alpha --static

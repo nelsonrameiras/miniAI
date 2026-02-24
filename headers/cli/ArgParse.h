@@ -8,6 +8,7 @@ typedef enum {
     CMD_BENCHMARK,
     CMD_RECOGNIZE,
     CMD_HELP,
+    CMD_VERSION,
     CMD_INVALID
 } CommandType;
 
@@ -31,8 +32,10 @@ typedef struct {
     int gridSize;              // Grid size (0 = auto-detect)
     int benchmarkReps;         // Benchmark repetitions (default 3)
     int loadModel;             // Load existing model (1) or train (0)
+    int resumeModel;           // Load existing model and continue training (1)
     int useStatic;             // Use static in-memory dataset (1) or PNG (0)
     int verbose;               // Verbose output
+    int seed;                  // Random seed (0 = random, >0 = fixed for reproducibility)
 } CommandArgs;
 
 // Parse command-line arguments
