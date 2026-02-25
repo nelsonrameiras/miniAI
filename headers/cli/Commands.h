@@ -5,12 +5,12 @@
 #include "../core/Arena.h"
 
 // Command execution functions
-int cmdTrain(CommandArgs args);
-int cmdTest(CommandArgs args);
-int cmdBenchmark(CommandArgs args);
-int cmdRecognize(CommandArgs args);
+int cmdTrain(const CommandArgs *args);
+int cmdTest(const CommandArgs *args);
+int cmdBenchmark(const CommandArgs *args);
+int cmdRecognize(const CommandArgs *args);
 
 // Command dispatcher
-int executeCommand(CommandArgs args);
+int executeCommand(const CommandArgs *args);
 
 #endif // _COMMANDS_H

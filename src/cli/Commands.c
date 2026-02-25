@@ -3,8 +3,8 @@
 #include "../../AIHeader.h"
 #include <stdio.h>
 
-int executeCommand(CommandArgs args) {
-    switch(args.command) {
+int executeCommand(const CommandArgs *args) {
+    switch(args->command) {
         case CMD_TRAIN:
             return cmdTrain(args);
             

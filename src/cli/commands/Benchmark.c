@@ -8,7 +8,7 @@
 
 extern TrainingConfig g_trainConfig;
 
-int cmdBenchmark(CommandArgs args) {
+int cmdBenchmark(const CommandArgs *args) {
     printf("=== BENCHMARK MODE ===\n\n");
     
     // Create arenas
@@ -24,7 +24,7 @@ int cmdBenchmark(CommandArgs args) {
     const char *charMap;
     int outputSize;
     
-    if (args.dataset == DATASET_SPEC_DIGITS) {
+    if (args->dataset == DATASET_SPEC_DIGITS) {
         charMap = CHARMAP_DIGITS;
         outputSize = 10;
     } else {
@@ -35,19 +35,19 @@ int cmdBenchmark(CommandArgs args) {
     // Create dataset
     Dataset *ds = NULL;
     
-    if (args.useStatic) {
+    if (args->useStatic) {
         // Static in-memory dataset
         printf("Dataset: Static in-memory\n");
-        float *data = (args.dataset == DATASET_SPEC_DIGITS) ? (float*)digits : (float*)dataset;
-        ds = datasetCreateMemory(args.gridSize * args.gridSize, outputSize, args.gridSize,
-                                data, args.dataset == DATASET_SPEC_DIGITS ? "DIGITS" : "ALPHANUMERIC",
-                                args.modelFile, charMap);
-    } else if (args.dataPath) {
+        float *data = (args->dataset == DATASET_SPEC_DIGITS) ? (float*)digits : (float*)dataset;
+        ds = datasetCreateMemory(args->gridSize * args->gridSize, outputSize, args->gridSize,
+                                data, args->dataset == DATASET_SPEC_DIGITS ? "DIGITS" : "ALPHANUMERIC",
+                                args->modelFile, charMap);
+    } else if (args->dataPath) {
         // PNG directory
-        printf("Dataset: PNG from %s\n", args.dataPath);
-        ds = datasetCreatePNG(args.dataPath, args.gridSize, outputSize,
-                             args.dataset == DATASET_SPEC_DIGITS ? "DIGITS" : "ALPHANUMERIC",
-                             args.modelFile, charMap);
+        printf("Dataset: PNG from %s\n", args->dataPath);
+        ds = datasetCreatePNG(args->dataPath, args->gridSize, outputSize,
+                             args->dataset == DATASET_SPEC_DIGITS ? "DIGITS" : "ALPHANUMERIC",
+                             args->modelFile, charMap);
     } else {
         fprintf(stderr, "Error: No dataset specified (use --static or --data)\n");
         arenaFree(perm);
@@ -62,12 +62,12 @@ int cmdBenchmark(CommandArgs args) {
         return 1;
     }
     
-    printf("Grid: %dx%d (%d inputs)\n", args.gridSize, args.gridSize, ds->inputSize);
+    printf("Grid: %dx%d (%d inputs)\n", args->gridSize, args->gridSize, ds->inputSize);
     printf("Classes: %d\n", ds->outputSize);
-    printf("Repetitions: %d\n\n", args.benchmarkReps);
+    printf("Repetitions: %d\n\n", args->benchmarkReps);
     
     // Run benchmark
-    runBenchmark(ds, perm, scratch, args.benchmarkReps);
+    runBenchmark(ds, perm, scratch, args->benchmarkReps);
     
     // Cleanup
     datasetFree(ds);

@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
     } else randomize();
 
     // Execute command
-    int result = executeCommand(args);
+    int result = executeCommand(&args);
     
     return result;
 }
