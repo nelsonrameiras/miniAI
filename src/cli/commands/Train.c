@@ -10,7 +10,7 @@
 
 extern TrainingConfig g_trainConfig;
 
-int cmdTrain(CommandArgs args) {
+int cmdTrain(const CommandArgs *args) {
     printf("=== TRAINING MODE ===\n\n");
     
     // Create arenas
@@ -26,7 +26,7 @@ int cmdTrain(CommandArgs args) {
     const char *charMap;
     int outputSize;
     
-    if (args.dataset == DATASET_SPEC_DIGITS) {
+    if (args->dataset == DATASET_SPEC_DIGITS) {
         charMap = CHARMAP_DIGITS;
         outputSize = 10;
     } else {
@@ -37,25 +37,25 @@ int cmdTrain(CommandArgs args) {
     // Create dataset
     Dataset *ds = NULL;
     
-    if (args.useStatic) {
+    if (args->useStatic) {
         // Static in-memory dataset
         printf("Dataset: Static in-memory\n");
-        printf("Grid: %dx%d (%d inputs)\n", args.gridSize, args.gridSize, args.gridSize * args.gridSize);
+        printf("Grid: %dx%d (%d inputs)\n", args->gridSize, args->gridSize, args->gridSize * args->gridSize);
         printf("Classes: %d\n\n", outputSize);
         
-        float *data = (args.dataset == DATASET_SPEC_DIGITS) ? (float*)digits : (float*)dataset;
-        ds = datasetCreateMemory(args.gridSize * args.gridSize, outputSize, args.gridSize,
-                                data, args.dataset == DATASET_SPEC_DIGITS ? "DIGITS" : "ALPHANUMERIC",
-                                args.modelFile, charMap);
-    } else if (args.dataPath) {
+        float *data = (args->dataset == DATASET_SPEC_DIGITS) ? (float*)digits : (float*)dataset;
+        ds = datasetCreateMemory(args->gridSize * args->gridSize, outputSize, args->gridSize,
+                                data, args->dataset == DATASET_SPEC_DIGITS ? "DIGITS" : "ALPHANUMERIC",
+                                args->modelFile, charMap);
+    } else if (args->dataPath) {
         // PNG directory
-        printf("Dataset: PNG from %s\n", args.dataPath);
-        printf("Grid: %dx%d (%d inputs)\n", args.gridSize, args.gridSize, args.gridSize * args.gridSize);
+        printf("Dataset: PNG from %s\n", args->dataPath);
+        printf("Grid: %dx%d (%d inputs)\n", args->gridSize, args->gridSize, args->gridSize * args->gridSize);
         printf("Classes: %d\n\n", outputSize);
         
-        ds = datasetCreatePNG(args.dataPath, args.gridSize, outputSize,
-                             args.dataset == DATASET_SPEC_DIGITS ? "DIGITS" : "ALPHANUMERIC",
-                             args.modelFile, charMap);
+        ds = datasetCreatePNG(args->dataPath, args->gridSize, outputSize,
+                             args->dataset == DATASET_SPEC_DIGITS ? "DIGITS" : "ALPHANUMERIC",
+                             args->modelFile, charMap);
     } else {
         fprintf(stderr, "Error: No dataset specified (use --static or --data)\n");
         arenaFree(perm);
@@ -71,13 +71,13 @@ int cmdTrain(CommandArgs args) {
     }
     
     // Load best configuration if available
-    const char *configFileToLoad = args.configFile;
+    const char *configFileToLoad = args->configFile;
     char generatedConfig[256];
 
     // If the user did not pass the flag --config, we gen the default best configuration path
     if (!configFileToLoad) {
-        const char *datasetName = args.dataset == DATASET_SPEC_DIGITS ? "digits" : "alpha";
-        const char *datasetType = args.useStatic ? "static" : "png";
+        const char *datasetName = args->dataset == DATASET_SPEC_DIGITS ? "digits" : "alpha";
+        const char *datasetType = args->useStatic ? "static" : "png";
         snprintf(generatedConfig, sizeof(generatedConfig), "IO/configs/best_config_%s_%s.txt",
                  datasetName, datasetType);
         configFileToLoad = generatedConfig;
@@ -102,9 +102,9 @@ int cmdTrain(CommandArgs args) {
     printf("Regularization: %.6f\n\n", LAMBDA);
     
     // Train, resume, or load
-    if (args.resumeModel) {
-        printf("Resuming training from %s\n\n", args.modelFile);
-        if (modelLoad(model, args.modelFile) != 0) {
+    if (args->resumeModel) {
+        printf("Resuming training from %s\n\n", args->modelFile);
+        if (modelLoad(model, args->modelFile) != 0) {
             fprintf(stderr, "Error: Could not load model for resuming\n");
             datasetFree(ds);
             arenaFree(perm);
@@ -112,9 +112,9 @@ int cmdTrain(CommandArgs args) {
             return 1;
         }
         trainModel(model, ds, scratch);
-    } else if (args.loadModel) {
-        printf("Loading existing model from %s\n\n", args.modelFile);
-        if (modelLoad(model, args.modelFile) != 0) {
+    } else if (args->loadModel) {
+        printf("Loading existing model from %s\n\n", args->modelFile);
+        if (modelLoad(model, args->modelFile) != 0) {
             fprintf(stderr, "Error: Could not load model\n");
             datasetFree(ds);
             arenaFree(perm);

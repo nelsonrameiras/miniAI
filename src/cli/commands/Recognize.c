@@ -10,15 +10,15 @@
 extern TrainingConfig g_trainConfig;
 extern void loadBestConfig(const char *configFile);
 
-int cmdRecognize(CommandArgs args) {
+int cmdRecognize(const CommandArgs *args) {
     printf("=== PHRASE RECOGNITION MODE ===\n\n");
     
-    if (!args.imageFile) {
+    if (!args->imageFile) {
         fprintf(stderr, "Error: recognize command requires --image option\n");
         return 1;
     }
     
-    if (!args.modelFile) {
+    if (!args->modelFile) {
         fprintf(stderr, "Error: recognize command requires --model option\n");
         return 1;
     }
@@ -36,7 +36,7 @@ int cmdRecognize(CommandArgs args) {
     const char *charMap;
     int outputSize;
     
-    if (args.dataset == DATASET_SPEC_DIGITS) {
+    if (args->dataset == DATASET_SPEC_DIGITS) {
         charMap = CHARMAP_DIGITS;
         outputSize = 10;
     } else {
@@ -44,11 +44,11 @@ int cmdRecognize(CommandArgs args) {
         outputSize = 62;
     }
     
-    int inputSize = args.gridSize * args.gridSize;
+    int inputSize = args->gridSize * args->gridSize;
     
     // Create phrase dataset (segments the image)
-    printf("Loading and segmenting phrase from: %s\n", args.imageFile);
-    Dataset *ds = datasetCreatePhrase(args.imageFile, args.gridSize, args.modelFile, charMap);
+    printf("Loading and segmenting phrase from: %s\n", args->imageFile);
+    Dataset *ds = datasetCreatePhrase(args->imageFile, args->gridSize, args->modelFile, charMap);
     
     if (!ds) {
         fprintf(stderr, "Error: Could not load or segment phrase\n");
@@ -57,22 +57,22 @@ int cmdRecognize(CommandArgs args) {
         return 1;
     }
     
-    printf("Grid: %dx%d (%d inputs per character)\n\n", args.gridSize, args.gridSize, inputSize);
+    printf("Grid: %dx%d (%d inputs per character)\n\n", args->gridSize, args->gridSize, inputSize);
 
     // Load config file if provided, or use default config for this model
-    if (args.configFile) {
-        loadBestConfig(args.configFile);
+    if (args->configFile) {
+        loadBestConfig(args->configFile);
     } else {
         // Auto-detect config file based on model name
         const char *configFile = NULL;
-        if (strstr(args.modelFile, "alpha_brain_png")) {
+        if (strstr(args->modelFile, "alpha_brain_png")) {
             configFile = "IO/configs/best_config_alpha_png.txt";
-        } else if (strstr(args.modelFile, "alpha_brain")) {
+        } else if (strstr(args->modelFile, "alpha_brain")) {
             fprintf(stdout, "Can not use static model for PNG. Using alphaPNG.");
             configFile = "IO/configs/best_config_alpha_png.txt";
-        } else if (strstr(args.modelFile, "digit_brain_png")) {
+        } else if (strstr(args->modelFile, "digit_brain_png")) {
             configFile = "IO/configs/best_config_digits_png.txt";
-        } else if (strstr(args.modelFile, "digit_brain")) {
+        } else if (strstr(args->modelFile, "digit_brain")) {
             fprintf(stdout, "Can not use static model for PNG. Using digitsPNG.");
             configFile = "IO/configs/best_config_digits_png.txt";
         }
@@ -95,8 +95,8 @@ int cmdRecognize(CommandArgs args) {
         return 1;
     }
     
-    printf("Loading model from %s\n", args.modelFile);
-    if (modelLoad(model, args.modelFile) != 0) {
+    printf("Loading model from %s\n", args->modelFile);
+    if (modelLoad(model, args->modelFile) != 0) {
         fprintf(stderr, "Error: Could not load model\n");
         datasetFree(ds);
         arenaFree(perm);
