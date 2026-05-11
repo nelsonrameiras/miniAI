@@ -15,7 +15,7 @@ RUN make clean && \
     strip miniAI
 
 # Stage 2: Runtime
-FROM ubuntu:24.04
+FROM ubuntu:26.04
 
 LABEL org.opencontainers.image.title="miniAI"
 LABEL org.opencontainers.image.description="Feed-forward neural network in pure C without ML libraries."
